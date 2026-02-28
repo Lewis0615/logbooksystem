@@ -52,6 +52,8 @@ if ($auth->isLoggedIn()) {
             --gold-light: #e8c96a;
             --border: #c2dece;
             --text-muted: #a8c9b5;
+            --custom-color: #5853f0;
+            --custom-color-accent: #050089; /* Example custom color variable */
         }
 
         * {
@@ -70,7 +72,7 @@ if ($auth->isLoggedIn()) {
 
         /* LEFT PANEL */
         .left-panel {
-            width: 38%;
+            width: 30%;
             background: var(--green-dark);
             position: relative;
             overflow: hidden;
@@ -637,7 +639,7 @@ if ($auth->isLoggedIn()) {
 
         /* SUBMIT BUTTON */
         .submit-btn {
-            background: var(--green-dark);
+            background: var(--custom-color);
             color: white;
             border: none;
             padding: 16px 24px;
@@ -654,7 +656,7 @@ if ($auth->isLoggedIn()) {
         }
 
         .submit-btn:hover {
-            background: var(--green-accent);
+            background: var(--custom-color-accent);
         }
 
         .submit-btn:active {
@@ -665,6 +667,158 @@ if ($auth->isLoggedIn()) {
             width: 18px;
             height: 18px;
             fill: currentColor;
+        }
+
+        /* DRESS CODE SECTION - LEFT PANEL */
+        .dress-code-section {
+            background: rgba(45, 122, 79, 0.2);
+            border: 1px solid rgba(201, 168, 76, 0.3);
+            border-radius: 14px;
+            padding: 1.5rem;
+            margin-top: 2rem;
+        }
+
+        .dress-code-header {
+            margin-bottom: 1.5rem;
+        }
+
+        .dress-code-title {
+            font-family: 'Playfair Display', serif;
+            font-size: 1.25rem;
+            font-weight: 600;
+            color: var(--gold-light);
+            margin-bottom: 0.5rem;
+        }
+
+        .dress-code-subtitle {
+            color: var(--text-muted);
+            font-size: 0.8rem;
+            line-height: 1.4;
+        }
+
+        .dress-code-grid {
+            display: flex;
+            flex-direction: column;
+            gap: 0.75rem;
+            margin-bottom: 1rem;
+        }
+
+        .dress-code-card {
+            background: rgba(255, 255, 255, 0.05);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 10px;
+            padding: 0.875rem;
+            display: flex;
+            align-items: center;
+            gap: 0.875rem;
+            transition: all 0.2s ease;
+            position: relative;
+        }
+
+        .dress-code-card.allowed {
+            border-left: 3px solid #10b981;
+        }
+
+        .dress-code-card.not-allowed {
+            border-left: 3px solid #ef4444;
+        }
+
+        .dress-code-card:hover {
+            background: rgba(255, 255, 255, 0.08);
+            transform: translateX(4px);
+        }
+
+        .dress-code-image-wrapper {
+            width: 60px;
+            height: 60px;
+            flex-shrink: 0;
+            border-radius: 8px;
+            overflow: hidden;
+            background: rgba(255, 255, 255, 0.9);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .dress-code-image {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+        }
+
+        .dress-code-card:hover .dress-code-image {
+            transform: scale(1.1);
+        }
+
+        .dress-code-content {
+            flex: 1;
+            min-width: 0;
+        }
+
+        .dress-code-status {
+            display: inline-block;
+            padding: 0.2rem 0.6rem;
+            border-radius: 12px;
+            font-size: 0.65rem;
+            font-weight: 600;
+            margin-bottom: 0.35rem;
+            text-transform: uppercase;
+            letter-spacing: 0.03em;
+        }
+
+        .dress-code-status.allowed-badge {
+            background: rgba(16, 185, 129, 0.2);
+            color: #6ee7b7;
+        }
+
+        .dress-code-status.notallowed-badge {
+            background: rgba(239, 68, 68, 0.2);
+            color: #fca5a5;
+        }
+
+        .dress-code-item-title {
+            font-size: 0.85rem;
+            font-weight: 600;
+            color: white;
+            margin-bottom: 0.25rem;
+            line-height: 1.3;
+        }
+
+        .dress-code-description {
+            font-size: 0.72rem;
+            color: var(--text-muted);
+            line-height: 1.4;
+            display: none;
+        }
+
+        .dress-code-footer {
+            background: rgba(201, 168, 76, 0.15);
+            border: 1px solid rgba(201, 168, 76, 0.3);
+            border-radius: 8px;
+            padding: 0.75rem;
+            text-align: center;
+            margin-top: 1rem;
+        }
+
+        .dress-code-footer p {
+            color: var(--gold-light);
+            font-size: 0.7rem;
+            font-weight: 500;
+            margin: 0;
+            line-height: 1.4;
+        }
+
+        .dress-code-expand {
+            color: var(--text-muted);
+            font-size: 0.7rem;
+            text-align: center;
+            margin-top: 0.75rem;
+            cursor: pointer;
+            transition: color 0.2s ease;
+        }
+
+        .dress-code-expand:hover {
+            color: var(--gold);
         }
 
         /* RESPONSIVE DESIGN */
@@ -690,6 +844,16 @@ if ($auth->isLoggedIn()) {
             .form-group.full-width {
                 grid-column: 1;
             }
+            
+            .dress-code-section {
+                margin-top: 1.5rem;
+                padding: 1.25rem;
+            }
+            
+            .dress-code-image-wrapper {
+                width: 55px;
+                height: 55px;
+            }
         }
 
         @media (max-width: 480px) {
@@ -707,6 +871,25 @@ if ($auth->isLoggedIn()) {
 
             .school-name {
                 font-size: 1.6rem;
+            }
+            
+            .dress-code-section {
+                padding: 1rem;
+                margin-top: 1.25rem;
+            }
+            
+            .dress-code-image-wrapper {
+                width: 50px;
+                height: 50px;
+            }
+            
+            .dress-code-title {
+                font-size: 1.1rem;
+            }
+            
+            .dress-code-card {
+                padding: 0.75rem;
+                gap: 0.75rem;
             }
         }
     </style>
@@ -731,6 +914,86 @@ if ($auth->isLoggedIn()) {
                 Register quickly and securely to access our campus. 
                 Your information is kept confidential and helps us maintain a safe environment.
             </p>
+            
+            <!-- Dress Code Section -->
+            <div class="dress-code-section">
+                <div class="dress-code-header">
+                    <h2 class="dress-code-title">Dress Code Policy</h2>
+                    <p class="dress-code-subtitle">Please observe our dress code guidelines when visiting campus</p>
+                </div>
+                
+                <div class="dress-code-grid">
+                    <!-- Proper Attire - Allowed -->
+                    <div class="dress-code-card allowed">
+                        <div class="dress-code-image-wrapper">
+                            <img src="assets/images/dress-code/proper-attire.svg" alt="Proper Attire" class="dress-code-image">
+                        </div>
+                        <div class="dress-code-content">
+                            <div class="dress-code-status allowed-badge">✓ Allowed</div>
+                            <h3 class="dress-code-item-title">Proper Attire</h3>
+                        </div>
+                    </div>
+                    
+                    <!-- Closed Footwear - Allowed -->
+                    <div class="dress-code-card allowed">
+                        <div class="dress-code-image-wrapper">
+                            <img src="assets/images/dress-code/closed-footwear.svg" alt="Closed Footwear" class="dress-code-image">
+                        </div>
+                        <div class="dress-code-content">
+                            <div class="dress-code-status allowed-badge">✓ Allowed</div>
+                            <h3 class="dress-code-item-title">Closed Footwear</h3>
+                        </div>
+                    </div>
+                    
+                    <!-- Sleeveless / Tank Tops - Not Allowed -->
+                    <div class="dress-code-card not-allowed">
+                        <div class="dress-code-image-wrapper">
+                            <img src="assets/images/dress-code/sleeveless.svg" alt="No Sleeveless" class="dress-code-image">
+                        </div>
+                        <div class="dress-code-content">
+                            <div class="dress-code-status notallowed-badge">✗ Not Allowed</div>
+                            <h3 class="dress-code-item-title">Sleeveless / Tank Tops</h3>
+                        </div>
+                    </div>
+                    
+                    <!-- Short Skirts/Shorts - Not Allowed -->
+                    <div class="dress-code-card not-allowed">
+                        <div class="dress-code-image-wrapper">
+                            <img src="assets/images/dress-code/short-skirts.svg" alt="No Short Skirts/Shorts" class="dress-code-image">
+                        </div>
+                        <div class="dress-code-content">
+                            <div class="dress-code-status notallowed-badge">✗ Not Allowed</div>
+                            <h3 class="dress-code-item-title">Short Skirts/Shorts</h3>
+                        </div>
+                    </div>
+                    
+                    <!-- Slippers / Flip-flops - Not Allowed -->
+                    <div class="dress-code-card not-allowed">
+                        <div class="dress-code-image-wrapper">
+                            <img src="assets/images/dress-code/slippers.svg" alt="No Slippers" class="dress-code-image">
+                        </div>
+                        <div class="dress-code-content">
+                            <div class="dress-code-status notallowed-badge">✗ Not Allowed</div>
+                            <h3 class="dress-code-item-title">Slippers / Flip-flops</h3>
+                        </div>
+                    </div>
+                    
+                    <!-- Offensive Clothing - Not Allowed -->
+                    <div class="dress-code-card not-allowed">
+                        <div class="dress-code-image-wrapper">
+                            <img src="assets/images/dress-code/offensive-clothing.svg" alt="No Offensive Clothing" class="dress-code-image">
+                        </div>
+                        <div class="dress-code-content">
+                            <div class="dress-code-status notallowed-badge">✗ Not Allowed</div>
+                            <h3 class="dress-code-item-title">Offensive Clothing</h3>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="dress-code-footer">
+                    <p>⚠️ Visitors not following the dress code may be denied entry</p>
+                </div>
+            </div>
                 </div>
             </div>
         </div>
@@ -745,62 +1008,6 @@ if ($auth->isLoggedIn()) {
 
         <!-- Registration Form -->
         <form class="registration-form" id="visitor-form">
-            <!-- Visitor Photo -->
-            <div class="form-group full-width">
-                <label class="form-label">
-                    <svg viewBox="0 0 24 24">
-                        <path d="M12 12c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm0 2c-2.67 0-8 1.34-8 4v2h16v-2c0-2.66-5.33-4-8-4z"/>
-                    </svg>
-                    Visitor Photo (Optional)
-                </label>
-                <div class="photo-upload-zone" id="photo-zone">
-                    <div class="upload-icon">
-                        <svg viewBox="0 0 24 24">
-                            <path d="M23 19V5c0-1.1-.9-2-2-2H3c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h18c1.1 0 2-.9 2-2zM8.5 13.5l2.5 3.01L14.5 12l4.5 6H5l3.5-4.5z"/>
-                            <circle cx="9.5" cy="8.5" r="1.5"/>
-                        </svg>
-                    </div>
-                    <div class="upload-text">
-                        <h4>Take Photo with Camera</h4>
-                        <p>Click to open camera and capture your photo</p>
-                    </div>
-                    <div class="camera-controls">
-                        <button type="button" class="camera-btn" id="start-camera-btn">
-                            <svg viewBox="0 0 24 24" width="16" height="16" fill="currentColor">
-                                <path d="M17 10.5V7c0-.55-.45-1-1-1H4c-.55 0-1 .45-1 1v10c0 .55.45 1 1 1h12c.55 0 1-.45 1-1v-3.5l4 4v-11l-4 4z"/>
-                            </svg>
-                            Open Camera
-                        </button>
-                    </div>
-                </div>
-                
-                <div class="camera-preview" id="camera-preview">
-                    <video id="camera-video" autoplay playsinline></video>
-                    <canvas id="photo-canvas"></canvas>
-                    <div class="camera-controls">
-                        <button type="button" class="camera-btn" id="capture-btn">
-                            <svg viewBox="0 0 24 24" width="16" height="16" fill="currentColor">
-                                <circle cx="12" cy="12" r="3.2"/>
-                                <path d="M9 2L7.17 4H4c-1.1 0-2 .9-2 2v12c0 1.1.9 2 2 2h16c1.1 0 2-.9 2-2V6c0-1.1-.9-2-2-2h-3.17L15 2H9zm3 15c-2.76 0-5-2.24-5-5s2.24-5 5-5 5 2.24 5 5-2.24 5-5 5z"/>
-                            </svg>
-                            Capture Photo
-                        </button>
-                        <button type="button" class="camera-btn secondary" id="close-camera-btn">
-                            <svg viewBox="0 0 24 24" width="16" height="16" fill="currentColor">
-                                <path d="M19 6.41L17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12z"/>
-                            </svg>
-                            Cancel
-                        </button>
-                    </div>
-                </div>
-                
-                <div class="photo-preview" id="photo-preview">
-                    <img id="photo-img" src="" alt="Captured Photo">
-                    <div class="filename" id="photo-filename">Captured Photo</div>
-                    <button type="button" class="retake-btn" id="retake-btn">Retake Photo</button>
-                </div>
-            </div>
-
             <!-- Full Name -->
             <div class="form-group">
                 <label class="form-label" for="fullName">
@@ -820,7 +1027,8 @@ if ($auth->isLoggedIn()) {
                     </svg>
                     Contact Number *
                 </label>
-                <input type="tel" id="contactNumber" class="form-input" placeholder="09XX XXX XXXX" required>
+                <input type="tel" id="contactNumber" class="form-input" placeholder="09X XXX XXXXX" pattern="09[0-9]{9}" maxlength="12" required title="Please enter a valid Philippine mobile number (e.g., 09123456789)">
+                <small style="color: #666; font-size: 0.8rem; margin-top: 0.25rem;"></small>    
             </div>
 
             <!-- Address -->
@@ -831,7 +1039,7 @@ if ($auth->isLoggedIn()) {
                     </svg>
                     Address
                 </label>
-                <input type="text" id="address" class="form-input" placeholder="Complete address">
+                <input type="text" id="address" class="form-input" placeholder="Street Address, Barangay, City/Municipality, Province, ZIP Code">
             </div>
 
             <!-- Purpose of Visit -->
@@ -850,6 +1058,17 @@ if ($auth->isLoggedIn()) {
                     <option value="delivery">Delivery</option>
                     <option value="other">Other</option>
                 </select>
+            </div>
+            
+            <!-- Purpose Other Input -->
+            <div class="form-group" id="purposeOtherContainer" style="display: none;">
+                <label class="form-label" for="purposeOther">
+                    <svg viewBox="0 0 24 24">
+                        <path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8l-6-6zm4 18H6V4h7v5h5v11z"/>
+                    </svg>
+                    Specify Purpose *
+                </label>
+                <input type="text" id="purposeOther" class="form-input" placeholder="Please specify your purpose">
             </div>
 
             <!-- Office/Department -->
@@ -870,6 +1089,17 @@ if ($auth->isLoggedIn()) {
                     <option value="other">Other</option>
                 </select>
             </div>
+            
+            <!-- Department Other Input -->
+            <div class="form-group" id="departmentOtherContainer" style="display: none;">
+                <label class="form-label" for="departmentOther">
+                    <svg viewBox="0 0 24 24">
+                        <path d="M21 16V4a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2h14a2 2 0 002-2zm-11-4c0-1.11.89-2 2-2s2 .89 2 2-.89 2-2 2-2-.89-2-2zM9 18v-2a2 2 0 012-2h2a2 2 0 012 2v2H9z"/>
+                    </svg>
+                    Specify Department
+                </label>
+                <input type="text" id="departmentOther" class="form-input" placeholder="Please specify the department">
+            </div>
 
             <!-- Person to Visit -->
             <div class="form-group full-width">
@@ -880,6 +1110,50 @@ if ($auth->isLoggedIn()) {
                     Person to Visit *
                 </label>
                 <input type="text" id="personToVisit" class="form-input" placeholder="Name of person you're visiting" required>
+            </div>
+
+            <!-- Group Visit -->
+            <div class="form-group">
+                <label class="form-label">
+                    <svg viewBox="0 0 24 24">
+                        <path d="M16 11c1.66 0 2.99-1.34 2.99-3S17.66 5 16 5c-1.66 0-3 1.34-3 3s1.34 3 3 3zm-8 0c1.66 0 2.99-1.34 2.99-3S9.66 5 8 5C6.34 5 5 6.34 5 8s1.34 3 3 3zm0 2c-2.33 0-7 1.17-7 3.5V19h14v-2.5c0-2.33-4.67-3.5-7-3.5zm8 0c-.29 0-.62.02-.97.05 1.16.84 1.97 1.97 1.97 3.45V19h6v-2.5c0-2.33-4.67-3.5-7-3.5z"/>
+                    </svg>
+                    Are you visiting as a group?
+                </label>
+                <div style="display: flex; gap: 1.5rem; margin-top: 0.5rem;">
+                    <label style="display: flex; align-items: center; gap: 0.5rem; cursor: pointer;">
+                        <input type="radio" name="groupVisit" id="groupVisitYes" value="yes" style="width: 18px; height: 18px; cursor: pointer;">
+                        <span style="color: var(--green-dark); font-weight: 500;">Yes</span>
+                    </label>
+                    <label style="display: flex; align-items: center; gap: 0.5rem; cursor: pointer;">
+                        <input type="radio" name="groupVisit" id="groupVisitNo" value="no" checked style="width: 18px; height: 18px; cursor: pointer;">
+                        <span style="color: var(--green-dark); font-weight: 500;">No</span>
+                    </label>
+                </div>
+            </div>
+
+            <!-- Number of People in Group -->
+            <div class="form-group" id="groupSizeContainer" style="display: none;">
+                <label class="form-label" for="groupSize">
+                    <svg viewBox="0 0 24 24">
+                        <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm0 18c-4.41 0-8-3.59-8-8s3.59-8 8-8 8 3.59 8 8-3.59 8-8 8zm.5-13H11v6l5.25 3.15.75-1.23-4.5-2.67z"/>
+                    </svg>
+                    Total Number of People *
+                </label>
+                <input type="number" id="groupSize" class="form-input" placeholder="Enter total number of people" min="2" max="100">
+            </div>
+
+            <!-- Group Members Names -->
+            <div class="form-group full-width" id="groupMembersContainer" style="display: none;">
+                <label class="form-label">
+                    <svg viewBox="0 0 24 24">
+                        <path d="M16 11c1.66 0 2.99-1.34 2.99-3S17.66 5 16 5c-1.66 0-3 1.34-3 3s1.34 3 3 3zm-8 0c1.66 0 2.99-1.34 2.99-3S9.66 5 8 5C6.34 5 5 6.34 5 8s1.34 3 3 3zm0 2c-2.33 0-7 1.17-7 3.5V19h14v-2.5c0-2.33-4.67-3.5-7-3.5zm8 0c-.29 0-.62.02-.97.05 1.16.84 1.97 1.97 1.97 3.45V19h6v-2.5c0-2.33-4.67-3.5-7-3.5z"/>
+                    </svg>
+                    Group Members Full Names *
+                </label>
+                <div id="groupMembersFields" style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; margin-top: 0.5rem;">
+                    <!-- Dynamic name fields will be inserted here -->
+                </div>
             </div>
 
             <!-- Additional Notes -->
@@ -895,20 +1169,105 @@ if ($auth->isLoggedIn()) {
 
             <!-- Valid ID Upload -->
             <div class="form-group full-width">
-                <label class="form-label">
+                <label class="form-label" for="idType">
                     <svg viewBox="0 0 24 24">
                         <path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8l-6-6zm4 18H6V4h7v5h5v11z"/>
                     </svg>
-                    Valid ID (Optional)
+                    Valid ID Type (Optional)
                 </label>
-                <label for="validId" class="file-upload-btn">
+                <select id="idType" class="form-select">
+                    <option value="">Select ID type</option>
+                    <option value="drivers_license">Driver's License</option>
+                    <option value="passport">Passport</option>
+                    <option value="national_id">National ID / PhilSys ID</option>
+                    <option value="voters_id">Voter's ID</option>
+                    <option value="prc_id">PRC ID</option>
+                    <option value="postal_id">Postal ID</option>
+                    <option value="sss_id">SSS ID</option>
+                    <option value="gsis_id">GSIS ID</option>
+                    <option value="tin_id">TIN ID</option>
+                    <option value="school_id">School ID</option>
+                    <option value="company_id">Company ID</option>
+                    <option value="barangay_id">Barangay ID</option>
+                    <option value="senior_citizen_id">Senior Citizen ID</option>
+                    <option value="pwd_id">PWD ID</option>
+                    <option value="other">Other</option>
+                </select>
+            </div>
+            
+            <!-- ID Type Other Input -->
+            <div class="form-group" id="idTypeOtherContainer" style="display: none;">
+                <label class="form-label" for="idTypeOther">
                     <svg viewBox="0 0 24 24">
-                        <path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8l-6-6zm-1 9V7.5L17.5 12H13z"/>
+                        <path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8l-6-6zm4 18H6V4h7v5h5v11z"/>
                     </svg>
-                    Choose File
-                    <input type="file" id="validId" accept="image/*,.pdf">
+                    Specify ID Type
                 </label>
-                <div class="file-name" id="id-name"></div>
+                <input type="text" id="idTypeOther" class="form-input" placeholder="Please specify your ID type">
+            </div>
+
+            <!-- Valid ID Photo/Upload -->
+            <div class="form-group full-width">
+                <label class="form-label">
+                    <svg viewBox="0 0 24 24">
+                        <path d="M23 19V5c0-1.1-.9-2-2-2H3c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h18c1.1 0 2-.9 2-2zM8.5 13.5l2.5 3.01L14.5 12l4.5 6H5l3.5-4.5z"/>
+                        <circle cx="9.5" cy="8.5" r="1.5"/>
+                    </svg>
+                    Upload/Capture Valid ID (Optional)
+                </label>
+                <div class="photo-upload-zone" id="photo-zone">
+                    <div class="upload-icon">
+                        <svg viewBox="0 0 24 24">
+                            <path d="M23 19V5c0-1.1-.9-2-2-2H3c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h18c1.1 0 2-.9 2-2zM8.5 13.5l2.5 3.01L14.5 12l4.5 6H5l3.5-4.5z"/>
+                            <circle cx="9.5" cy="8.5" r="1.5"/>
+                        </svg>
+                    </div>
+                    <div class="upload-text">
+                        <h4>Capture ID Photo or Upload File</h4>
+                        <p>Use camera to capture or choose a file</p>
+                    </div>
+                    <div class="camera-controls">
+                        <button type="button" class="camera-btn" id="start-camera-btn">
+                            <svg viewBox="0 0 24 24" width="16" height="16" fill="currentColor">
+                                <path d="M17 10.5V7c0-.55-.45-1-1-1H4c-.55 0-1 .45-1 1v10c0 .55.45 1 1 1h12c.55 0 1-.45 1-1v-3.5l4 4v-11l-4 4z"/>
+                            </svg>
+                            Open Camera
+                        </button>
+                        <label for="validId" class="camera-btn secondary">
+                            <svg viewBox="0 0 24 24" width="16" height="16" fill="currentColor">
+                                <path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8l-6-6zm-1 9V7.5L17.5 12H13z"/>
+                            </svg>
+                            Upload File
+                            <input type="file" id="validId" accept="image/*,.pdf" style="position: absolute; opacity: 0; pointer-events: none;">
+                        </label>
+                    </div>
+                </div>
+                
+                <div class="camera-preview" id="camera-preview">
+                    <video id="camera-video" autoplay playsinline></video>
+                    <canvas id="photo-canvas"></canvas>
+                    <div class="camera-controls">
+                        <button type="button" class="camera-btn" id="capture-btn">
+                            <svg viewBox="0 0 24 24" width="16" height="16" fill="currentColor">
+                                <circle cx="12" cy="12" r="3.2"/>
+                                <path d="M9 2L7.17 4H4c-1.1 0-2 .9-2 2v12c0 1.1.9 2 2 2h16c1.1 0 2-.9 2-2V6c0-1.1-.9-2-2-2h-3.17L15 2H9zm3 15c-2.76 0-5-2.24-5-5s2.24-5 5-5 5 2.24 5 5-2.24 5-5 5z"/>
+                            </svg>
+                            Capture ID Photo
+                        </button>
+                        <button type="button" class="camera-btn secondary" id="close-camera-btn">
+                            <svg viewBox="0 0 24 24" width="16" height="16" fill="currentColor">
+                                <path d="M19 6.41L17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12z"/>
+                            </svg>
+                            Cancel
+                        </button>
+                    </div>
+                </div>
+                
+                <div class="photo-preview" id="photo-preview">
+                    <img id="photo-img" src="" alt="Captured ID Photo">
+                    <div class="filename" id="photo-filename">Captured ID Photo</div>
+                    <button type="button" class="retake-btn" id="retake-btn">Retake Photo</button>
+                </div>
             </div>
 
             <!-- Submit Button -->
@@ -1013,8 +1372,15 @@ if ($auth->isLoggedIn()) {
                 contactNumber: formData.contactNumber,
                 address: formData.address || 'Not specified',
                 purpose: formData.purpose,
+                purposeOther: formData.purposeOther || null,
                 department: formData.department || 'Not specified',
+                departmentOther: formData.departmentOther || null,
+                idType: formData.idType || 'Not specified',
+                idTypeOther: formData.idTypeOther || null,
                 personToVisit: formData.personToVisit,
+                isGroupVisit: formData.isGroupVisit,
+                groupSize: formData.groupSize || 1,
+                groupMembers: formData.groupMembers || [],
                 notes: formData.notes || 'None',
                 registrationDate: dateTime.date,
                 registrationTime: dateTime.time,
@@ -1037,13 +1403,13 @@ if ($auth->isLoggedIn()) {
         }
 
         // Get purpose text from select value
-        function getPurposeText(value) {
+        function getPurposeText(value, otherValue = null) {
             const purposes = {
                 'academic': 'Academic Inquiry',
                 'business': 'Business/Official',
                 'personal': 'Personal Visit',
                 'delivery': 'Delivery',
-                'other': 'Other'
+                'other': otherValue || 'Other'
             };
             return purposes[value] || value;
         }
@@ -1147,33 +1513,170 @@ if ($auth->isLoggedIn()) {
 
         function retakePhoto() {
             capturedPhotoBlob = null;
+            // Clear file input
+            document.getElementById('validId').value = '';
             document.getElementById('photo-preview').style.display = 'none';
             document.getElementById('photo-zone').style.display = 'block';
         }
 
-        // ID upload handling
-        function handleID(event) {
-            const file = event.target.files[0];
-            const filenameSpan = document.getElementById('id-name');
-            
-            if (file) {
-                filenameSpan.textContent = file.name;
-            } else {
-                filenameSpan.textContent = '';
-            }
-        }
-
         // Initialize event listeners
         document.addEventListener('DOMContentLoaded', function() {
+            // Group visit toggle
+            const groupVisitYes = document.getElementById('groupVisitYes');
+            const groupVisitNo = document.getElementById('groupVisitNo');
+            const groupSizeContainer = document.getElementById('groupSizeContainer');
+            const groupSizeInput = document.getElementById('groupSize');
+            
+            groupVisitYes.addEventListener('change', function() {
+                if (this.checked) {
+                    groupSizeContainer.style.display = 'flex';
+                    groupSizeInput.required = true;
+                }
+            });
+            
+            groupVisitNo.addEventListener('change', function() {
+                if (this.checked) {
+                    groupSizeContainer.style.display = 'none';
+                    groupSizeInput.required = false;
+                    groupSizeInput.value = '';
+                    // Hide and clear group members fields
+                    document.getElementById('groupMembersContainer').style.display = 'none';
+                    document.getElementById('groupMembersFields').innerHTML = '';
+                }
+            });
+            
+            // Group size change - generate name fields
+            groupSizeInput.addEventListener('input', function() {
+                const numberOfPeople = parseInt(this.value);
+                const groupMembersContainer = document.getElementById('groupMembersContainer');
+                const groupMembersFields = document.getElementById('groupMembersFields');
+                
+                if (numberOfPeople >= 2 && numberOfPeople <= 100) {
+                    groupMembersContainer.style.display = 'flex';
+                    
+                    // Clear existing fields
+                    groupMembersFields.innerHTML = '';
+                    
+                    // Generate name fields
+                    for (let i = 1; i <= numberOfPeople; i++) {
+                        const fieldDiv = document.createElement('div');
+                        fieldDiv.style.cssText = 'display: flex; flex-direction: column;';
+                        
+                        const label = document.createElement('label');
+                        label.style.cssText = 'font-size: 0.85rem; color: var(--green-dark); margin-bottom: 0.5rem; font-weight: 500;';
+                        label.textContent = `Person ${i} Full Name *`;
+                        
+                        const input = document.createElement('input');
+                        input.type = 'text';
+                        input.className = 'form-input';
+                        input.placeholder = `Enter full name of person ${i}`;
+                        input.required = true;
+                        input.id = `groupMember${i}`;
+                        input.name = `groupMember${i}`;
+                        
+                        fieldDiv.appendChild(label);
+                        fieldDiv.appendChild(input);
+                        groupMembersFields.appendChild(fieldDiv);
+                    }
+                } else {
+                    groupMembersContainer.style.display = 'none';
+                    groupMembersFields.innerHTML = '';
+                }
+            });
+            
+            // Dropdown "Other" handling
+            // Purpose of Visit
+            const purposeSelect = document.getElementById('purpose');
+            const purposeOtherContainer = document.getElementById('purposeOtherContainer');
+            const purposeOtherInput = document.getElementById('purposeOther');
+            
+            purposeSelect.addEventListener('change', function() {
+                if (this.value === 'other') {
+                    purposeOtherContainer.style.display = 'flex';
+                    purposeOtherInput.required = true;
+                } else {
+                    purposeOtherContainer.style.display = 'none';
+                    purposeOtherInput.required = false;
+                    purposeOtherInput.value = '';
+                }
+            });
+            
+            // Department
+            const departmentSelect = document.getElementById('department');
+            const departmentOtherContainer = document.getElementById('departmentOtherContainer');
+            const departmentOtherInput = document.getElementById('departmentOther');
+            
+            departmentSelect.addEventListener('change', function() {
+                if (this.value === 'other') {
+                    departmentOtherContainer.style.display = 'flex';
+                    departmentOtherInput.required = false; // Not required as department itself is optional
+                } else {
+                    departmentOtherContainer.style.display = 'none';
+                    departmentOtherInput.value = '';
+                }
+            });
+            
+            // ID Type
+            const idTypeSelect = document.getElementById('idType');
+            const idTypeOtherContainer = document.getElementById('idTypeOtherContainer');
+            const idTypeOtherInput = document.getElementById('idTypeOther');
+            
+            idTypeSelect.addEventListener('change', function() {
+                if (this.value === 'other') {
+                    idTypeOtherContainer.style.display = 'flex';
+                    idTypeOtherInput.required = false; // Not required as ID type itself is optional
+                } else {
+                    idTypeOtherContainer.style.display = 'none';
+                    idTypeOtherInput.value = '';
+                }
+            });
+            
             // Camera controls
             document.getElementById('start-camera-btn').addEventListener('click', startCamera);
             document.getElementById('capture-btn').addEventListener('click', capturePhoto);
             document.getElementById('close-camera-btn').addEventListener('click', stopCamera);
             document.getElementById('retake-btn').addEventListener('click', retakePhoto);
 
+            // Contact number validation - only allow numbers
+            const contactNumberInput = document.getElementById('contactNumber');
+            contactNumberInput.addEventListener('input', function(e) {
+                // Remove any non-numeric characters
+                this.value = this.value.replace(/[^0-9]/g, '');
+                
+                // Limit to 11 digits
+                if (this.value.length > 11) {
+                    this.value = this.value.slice(0, 11);
+                }
+            });
+            
+            contactNumberInput.addEventListener('keypress', function(e) {
+                // Only allow numeric keys
+                if (e.key && !/[0-9]/.test(e.key) && e.key !== 'Backspace' && e.key !== 'Delete' && e.key !== 'Tab' && e.key !== 'ArrowLeft' && e.key !== 'ArrowRight') {
+                    e.preventDefault();
+                }
+            });
+
             // ID upload
             const idInput = document.getElementById('validId');
-            idInput.addEventListener('change', handleID);
+            idInput.addEventListener('change', function(event) {
+                const file = event.target.files[0];
+                if (file) {
+                    // Create preview for uploaded file
+                    const reader = new FileReader();
+                    reader.onload = function(e) {
+                        const img = document.getElementById('photo-img');
+                        img.src = e.target.result;
+                        document.getElementById('photo-filename').textContent = file.name;
+                        
+                        // Show preview and hide upload zone
+                        document.getElementById('photo-zone').style.display = 'none';
+                        document.getElementById('photo-preview').style.display = 'block';
+                    };
+                    if (file.type.startsWith('image/')) {
+                        reader.readAsDataURL(file);
+                    }
+                }
+            });
 
             // Form submission
             const form = document.getElementById('visitor-form');
@@ -1181,19 +1684,65 @@ if ($auth->isLoggedIn()) {
                 e.preventDefault();
                 
                 // Collect form data
+                const isGroupVisit = document.getElementById('groupVisitYes').checked;
+                const groupSize = isGroupVisit ? parseInt(document.getElementById('groupSize').value) : null;
+                
+                // Collect group member names if it's a group visit
+                let groupMembers = [];
+                if (isGroupVisit && groupSize) {
+                    for (let i = 1; i <= groupSize; i++) {
+                        const memberInput = document.getElementById(`groupMember${i}`);
+                        if (memberInput) {
+                            groupMembers.push(memberInput.value);
+                        }
+                    }
+                }
+                
                 const formData = {
                     fullName: document.getElementById('fullName').value,
                     contactNumber: document.getElementById('contactNumber').value,
                     address: document.getElementById('address').value,
                     purpose: document.getElementById('purpose').value,
+                    purposeOther: document.getElementById('purpose').value === 'other' ? document.getElementById('purposeOther').value : null,
                     department: document.getElementById('department').value,
+                    departmentOther: document.getElementById('department').value === 'other' ? document.getElementById('departmentOther').value : null,
+                    idType: document.getElementById('idType').value,
+                    idTypeOther: document.getElementById('idType').value === 'other' ? document.getElementById('idTypeOther').value : null,
                     personToVisit: document.getElementById('personToVisit').value,
+                    isGroupVisit: isGroupVisit,
+                    groupSize: groupSize,
+                    groupMembers: groupMembers,
                     notes: document.getElementById('notes').value
                 };
                 
                 // Validate required fields
                 if (!formData.fullName || !formData.contactNumber || !formData.purpose || !formData.personToVisit) {
                     alert('Please fill in all required fields marked with *');
+                    return;
+                }
+                
+                // Validate "other" purpose specification
+                if (formData.purpose === 'other' && !formData.purposeOther) {
+                    alert('Please specify your purpose of visit');
+                    return;
+                }
+                
+                // Validate Philippine mobile number format
+                const phonePattern = /^09[0-9]{9}$/;
+                if (!phonePattern.test(formData.contactNumber)) {
+                    alert('Please enter a valid Philippine mobile number (e.g., 09123456789)');
+                    return;
+                }
+                
+                // Validate group size if group visit is selected
+                if (formData.isGroupVisit && (!formData.groupSize || formData.groupSize < 2)) {
+                    alert('Please enter the total number of people in your group (minimum 2)');
+                    return;
+                }
+                
+                // Validate group member names
+                if (formData.isGroupVisit && formData.groupMembers.length !== formData.groupSize) {
+                    alert('Please enter the full names of all group members');
                     return;
                 }
                 

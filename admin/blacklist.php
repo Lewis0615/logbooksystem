@@ -481,7 +481,7 @@ $csrf_token = generateCSRFToken();
             border-color: var(--warning);
         }
 
-        .btn-outline-warning:hover {
+        .btn-outline-warning:hover {    
             background: var(--warning);
             border-color: var(--warning);
             color: white;
