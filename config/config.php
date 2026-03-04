@@ -10,7 +10,7 @@ if (session_status() == PHP_SESSION_NONE) {
 }
 
 // Application Settings
-define('APP_NAME', 'St. Dominic Savio College - Visitor Management System');
+define('APP_NAME', 'SDSC - Visitor Log Book Management System');
 define('APP_VERSION', '1.0.0');
 define('APP_URL', 'http://localhost/logbooksystem');
 define('UPLOAD_PATH', __DIR__ . '/../assets/uploads/');
@@ -101,7 +101,14 @@ function sanitizeInput($input) {
 }
 
 function generateVisitorPass() {
-    return 'VP' . date('Ymd') . str_pad(mt_rand(1, 9999), 4, '0', STR_PAD_LEFT);
+    global $db;
+    
+    // Get the total count of visits + 1 to create sequential pass numbers
+    $result = $db->fetch("SELECT COUNT(*) as total FROM visits", []);
+    $nextNumber = ($result['total'] ?? 0) + 1;
+    
+    // Return simple sequential number as string
+    return (string)$nextNumber;
 }
 
 function isValidEmail($email) {

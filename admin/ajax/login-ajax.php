@@ -53,7 +53,7 @@ try {
         if ($user['role'] === ROLE_ADMIN || $user['role'] === ROLE_SUPERVISOR) {
             $redirect_url = '../admin/dashboard.php';
         } elseif ($user['role'] === ROLE_GUARD) {
-            $redirect_url = '../admin/checkin.php';
+            $redirect_url = '../admin/guard-visitor-management.php';
         } else {
             $redirect_url = '../admin/dashboard.php';
         }

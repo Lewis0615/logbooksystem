@@ -7,9 +7,9 @@
 require_once '../config/config.php';
 require_once '../config/auth.php';
 
-// Require admin role only
-$auth->requireLogin('../login.php');
-if (!$auth->hasRole(ROLE_ADMIN)) {
+// Require admin or supervisor role
+$auth->requireLogin('login.php');
+if (!$auth->hasRole(ROLE_ADMIN) && !$auth->hasRole(ROLE_SUPERVISOR)) {
     header('Location: dashboard.php');
     exit();
 }
@@ -171,20 +171,14 @@ $csrf_token = generateCSRFToken();
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>User Management - <?php echo APP_NAME; ?></title>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=Poppins:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;500;600;700;800&family=DM+Sans:wght@300;400;500;600;700&display=swap" rel="stylesheet">
     <link href="../assets/css/bootstrap.min.css" rel="stylesheet">
     <link href="../assets/css/vendor/font-awesome.min.css" rel="stylesheet">
     <link href="../assets/css/datatables.min.css" rel="stylesheet">
     <style>
         :root {
-            /* Modern Green Palette */
-            --primary: #069668;
-            --primary-dark: #047857;
-            --primary-light: #10b981;
-            --primary-bg: #ecfdf5;
-            --primary-hover: #059669;
-            
-            /* Neutral Colors */
+            /* Gray Scale */
+            --gray-25: #fcfcfd;
             --gray-50: #f9fafb;
             --gray-100: #f3f4f6;
             --gray-200: #e5e7eb;
@@ -195,19 +189,26 @@ $csrf_token = generateCSRFToken();
             --gray-700: #374151;
             --gray-800: #1f2937;
             --gray-900: #111827;
+            --gray-950: #030712;
             
-            /* Semantic Colors */
-            --success: #10b981;
-            --warning: #f59e0b;
-            --danger: #ef4444;
-            --info: #3b82f6;
+            /* Accent Colors */
+            --accent-blue: #3b82f6;
+            --accent-teal: #14b8a6;
+            --accent-orange: #f97316;
+            --accent-red: #ef4444;
+            --green-500: #22c55e;
             
-            /* UI Colors */
-            --border-color: #e5e7eb;
-            --shadow-sm: 0 1px 2px 0 rgba(0, 0, 0, 0.05);
-            --shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.1), 0 1px 2px 0 rgba(0, 0, 0, 0.06);
-            --shadow-md: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
-            --shadow-lg: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
+            /* Borders & Shadows */
+            --border-lt: #e5e7eb;
+            --shadow-xs: 0 1px 2px 0 rgba(0, 0, 0, 0.05);
+            --shadow-sm: 0 1px 3px 0 rgba(0, 0, 0, 0.1), 0 1px 2px -1px rgba(0, 0, 0, 0.1);
+            --shadow-md: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -2px rgba(0, 0, 0, 0.1);
+            --shadow-lg: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -4px rgba(0, 0, 0, 0.1);
+            
+            /* Border Radius */
+            --radius: 10px;
+            --radius-sm: 6px;
+            --radius-xs: 4px;
         }
 
         * {
@@ -216,7 +217,7 @@ $csrf_token = generateCSRFToken();
         }
 
         body {
-            font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+            font-family: 'DM Sans', -apple-system, BlinkMacSystemFont, sans-serif;
             background: var(--gray-50);
             color: var(--gray-900);
             font-size: 14px;
@@ -224,8 +225,8 @@ $csrf_token = generateCSRFToken();
         }
 
         .main-content {
-            margin-left: 280px;
-            padding: 1.5rem;
+            margin-left: 260px;
+            padding: 28px 30px;
             transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
             min-height: 100vh;
             background: var(--gray-50);
@@ -236,11 +237,11 @@ $csrf_token = generateCSRFToken();
         }
 
         .page-header {
-            background: linear-gradient(135deg, var(--primary) 0%, var(--primary-dark) 100%);
+            background: linear-gradient(135deg, #3b82f6 0%, #2563eb 50%, #1d4ed8 100%);
             border-radius: 16px;
             box-shadow: var(--shadow-lg);
-            padding: 2rem;
-            margin-bottom: 1.5rem;
+            padding: 32px 36px;
+            margin-bottom: 24px;
             border: none;
             position: relative;
             overflow: hidden;
@@ -249,102 +250,85 @@ $csrf_token = generateCSRFToken();
         .page-header::before {
             content: '';
             position: absolute;
-            top: -100px;
-            right: -100px;
-            width: 300px;
-            height: 300px;
+            top: -50px;
+            right: -50px;
+            width: 200px;
+            height: 200px;
+            background: radial-gradient(circle, rgba(255, 255, 255, 0.15) 0%, transparent 70%);
+            border-radius: 50%;
+        }
+
+        .page-header::after {
+            content: '';
+            position: absolute;
+            bottom: -30px;
+            left: -30px;
+            width: 150px;
+            height: 150px;
             background: radial-gradient(circle, rgba(255, 255, 255, 0.1) 0%, transparent 70%);
             border-radius: 50%;
         }
 
         .page-header h2 {
-            font-family: 'Poppins', sans-serif;
-            font-size: 1.875rem;
-            font-weight: 700;
-            color: white;
-            margin-bottom: 0.25rem;
-            line-height: 1.2;
-            letter-spacing: -0.025em;
+            font-family: 'Syne', sans-serif;
+            font-size: 1.8rem;
+            font-weight: 800;
+            color: #fff;
+            margin: 0 0 4px;
+            letter-spacing: -.02em;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .page-header-inner {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            position: relative;
+            z-index: 1;
         }
 
         .page-header .subtitle {
-            color: rgba(255, 255, 255, 0.8);
-            font-size: 0.9375rem;
-            font-weight: 400;
-            margin-bottom: 0;
+            color: rgba(255,255,255,.7);
+            font-size: .9rem;
+            margin: 0;
         }
 
-        .stats-grid {
-            display: grid;
-            grid-template-columns: repeat(4, 1fr);
-            gap: 1.5rem;
-        }
-
-        .stats-card {
+        .content-card, .user-card, .card {
             background: white;
-            border: 1px solid var(--border-color);
-            border-radius: 12px;
-            box-shadow: var(--shadow-sm);
+            border: 1px solid var(--border-lt);
+            border-radius: var(--radius);
+            box-shadow: var(--shadow-xs);
             transition: all 0.3s ease;
-            position: relative;
-            overflow: hidden;
         }
 
-        .stats-card:hover {
-            box-shadow: var(--shadow-md);
-            transform: translateY(-2px);
+        .content-card:hover, .user-card:hover, .card:hover {
+            box-shadow: var(--shadow-sm);
         }
 
-        .stats-card .card-body {
-            padding: 1.5rem;
-            position: relative;
-        }
-
-        .stats-icon-bg {
-            width: 48px;
-            height: 48px;
-            border-radius: 12px;
+        .card-header {
+            background: var(--gray-50);
+            border-bottom: 1px solid var(--border-lt);
+            padding: 16px 20px;
             display: flex;
             align-items: center;
-            justify-content: center;
-            font-size: 1.25rem;
-            margin-bottom: 1rem;
+            justify-content: space-between;
         }
 
-        .stats-number {
-            font-family: 'Poppins', sans-serif;
-            font-size: 2.25rem;
+        .card-header h5 {
+            font-family: 'Syne', sans-serif;
+            font-size: .95rem;
             font-weight: 700;
-            line-height: 1;
-            margin-bottom: 0.5rem;
-            color: var(--gray-900);
+            color: var(--gray-800);
+            display: flex;
+            align-items: center;
+            gap: 9px;
+            margin: 0;
         }
 
-        .stats-label {
-            color: var(--gray-600);
-            font-size: 0.875rem;
-            font-weight: 500;
-            text-transform: capitalize;
-        }
-
-        .content-card, .user-card {
-            background: white;
-            border: 1px solid var(--border-color);
-            border-radius: 12px;
-            box-shadow: var(--shadow-sm);
-            transition: all 0.3s ease;
-        }
-
-        .content-card:hover, .user-card:hover {
-            box-shadow: var(--shadow-md);
-        }
-
-        .content-card .card-header, .user-card .card-header {
-            background: white;
-            color: var(--gray-900);
-            border-bottom: 1px solid var(--border-color);
-            padding: 1.25rem 1.5rem;
-            border-radius: 12px 12px 0 0;
+        .card-body {
+            padding: 20px 22px;
         }
 
         .table {
@@ -352,24 +336,25 @@ $csrf_token = generateCSRFToken();
         }
 
         .table thead th {
-            border-bottom: 2px solid var(--border-color);
+            background: var(--gray-50);
+            border-bottom: 2px solid var(--border-lt);
             color: var(--gray-700);
-            font-weight: 600;
-            font-size: 0.8125rem;
+            font-weight: 700;
+            font-size: .7rem;
             text-transform: uppercase;
-            letter-spacing: 0.05em;
-            padding: 1rem 0.75rem;
+            letter-spacing: .08em;
+            padding: 12px 14px;
         }
 
         .table tbody td {
-            padding: 1rem 0.75rem;
+            padding: 12px 14px;
             vertical-align: middle;
-            color: var(--gray-900);
-            font-size: 0.875rem;
+            color: var(--gray-800);
+            font-size: .875rem;
         }
 
         .table tbody tr {
-            border-bottom: 1px solid var(--gray-100);
+            border-bottom: 1px solid var(--border-lt);
             transition: background-color 0.2s ease;
         }
 
@@ -378,82 +363,84 @@ $csrf_token = generateCSRFToken();
         }
 
         .badge {
-            padding: 0.375rem 0.75rem;
+            padding: 5px 11px;
             font-weight: 600;
             font-size: 0.75rem;
-            border-radius: 6px;
+            border-radius: var(--radius-sm);
         }
 
         .role-badge {
             font-size: 0.75rem;
-            padding: 0.35rem 0.65rem;
-            border-radius: 6px;
+            padding: 5px 10px;
+            border-radius: var(--radius-sm);
         }
 
-        .role-admin { background: var(--danger); }
-        .role-supervisor { background: var(--warning); }
-        .role-guard { background: var(--primary); }
-        .status-active { color: var(--success); }
-        .status-inactive { color: var(--danger); }
+        .role-admin { background: var(--accent-red); }
+        .role-supervisor { background: var(--accent-orange); }
+        .role-guard { background: var(--accent-blue); }
+        .status-active { color: var(--green-500); }
+        .status-inactive { color: var(--accent-red); }
 
         .btn-primary {
-            background: var(--primary);
+            background: linear-gradient(135deg, var(--accent-blue), #60a5fa);
             border: none;
-            border-radius: 8px;
-            padding: 0.625rem 1.5rem;
+            border-radius: var(--radius-sm);
+            padding: 9px 18px;
             font-weight: 600;
-            font-size: 0.875rem;
-            transition: all 0.2s ease;
+            font-size: .875rem;
+            color: #fff;
+            box-shadow: 0 2px 8px rgba(59,130,246,.28);
+            transition: all .2s ease;
         }
 
         .btn-primary:hover {
-            background: var(--primary-dark);
+            background: linear-gradient(135deg, #2563eb, #3b82f6);
             transform: translateY(-1px);
-            box-shadow: var(--shadow-md);
+            box-shadow: 0 4px 14px rgba(59,130,246,.38);
         }
 
         .btn-light {
-            background: white;
-            border: 1px solid var(--border-color);
-            color: var(--gray-700);
-            border-radius: 8px;
-            padding: 0.625rem 1.5rem;
+            background: rgba(255,255,255,.15);
+            border: 1px solid rgba(255,255,255,.2);
+            border-radius: var(--radius-sm);
+            padding: 9px 18px;
             font-weight: 600;
-            font-size: 0.875rem;
-            transition: all 0.2s ease;
+            font-size: .875rem;
+            color: #fff;
+            backdrop-filter: blur(4px);
+            transition: all .2s ease;
         }
 
         .btn-light:hover {
-            background: var(--gray-50);
-            border-color: var(--gray-300);
-            color: var(--gray-900);
+            background: rgba(255,255,255,.25);
+            color: #fff;
         }
 
         .btn-sm {
-            padding: 0.4rem 0.75rem;
-            font-size: 0.8125rem;
-            border-radius: 6px;
+            padding: 6px 12px;
+            font-size: .8rem;
+            border-radius: var(--radius-xs);
         }
 
         .btn-outline-primary {
-            color: var(--primary);
-            border-color: var(--primary);
+            color: var(--accent-blue);
+            border-color: var(--accent-blue);
         }
 
         .btn-outline-primary:hover {
-            background: var(--primary);
-            border-color: var(--primary);
+            background: var(--accent-blue);
+            border-color: var(--accent-blue);
             color: white;
         }
 
         .btn-outline-danger {
-            color: var(--danger);
-            border-color: var(--danger);
+            color: var(--accent-red);
+            border-color: var(--accent-red);
         }
 
         .btn-outline-danger:hover {
-            background: var(--danger);
-            border-color: var(--danger);
+            background: var(--accent-red);
+            border-color: var(--accent-red);
             color: white;
         }
 
@@ -461,7 +448,7 @@ $csrf_token = generateCSRFToken();
             background: var(--gray-500);
             border: none;
             color: white;
-            border-radius: 8px;
+            border-radius: var(--radius-sm);
         }
 
         .btn-secondary:hover {
@@ -469,10 +456,10 @@ $csrf_token = generateCSRFToken();
         }
 
         .btn-danger {
-            background: var(--danger);
+            background: var(--accent-red);
             border: none;
             color: white;
-            border-radius: 8px;
+            border-radius: var(--radius-sm);
         }
 
         .btn-danger:hover {
@@ -480,77 +467,86 @@ $csrf_token = generateCSRFToken();
         }
 
         .form-control, .form-select {
-            border-radius: 8px;
-            border: 1px solid var(--border-color);
-            padding: 0.625rem 0.875rem;
-            transition: all 0.2s ease;
-            font-size: 0.875rem;
+            border-radius: var(--radius-sm);
+            border: 1px solid var(--border-lt);
+            padding: 9px 12px;
+            transition: all .2s ease;
+            font-size: .875rem;
+            font-family: 'DM Sans', sans-serif;
+            color: var(--gray-800);
         }
 
         .form-control:focus, .form-select:focus {
-            border-color: var(--primary);
-            box-shadow: 0 0 0 3px rgba(6, 150, 104, 0.1);
+            border-color: var(--accent-blue);
+            box-shadow: 0 0 0 3px rgba(59,130,246,.12);
             outline: none;
         }
 
         .form-label {
             color: var(--gray-700);
             font-weight: 600;
-            font-size: 0.875rem;
-            margin-bottom: 0.5rem;
+            font-size: .875rem;
+            margin-bottom: 8px;
         }
 
         .modal-content {
             border: none;
-            border-radius: 12px;
+            border-radius: var(--radius);
             box-shadow: var(--shadow-lg);
         }
 
         .modal-header {
-            border-bottom: 1px solid var(--border-color);
-            padding: 1.25rem 1.5rem;
+            border-bottom: 1px solid var(--border-lt);
+            padding: 18px 24px;
             background: var(--gray-50);
         }
 
         .modal-title {
-            font-family: 'Poppins', sans-serif;
+            font-family: 'Syne', sans-serif;
             font-weight: 600;
-            color: var(--gray-900);
         }
 
         .modal-body {
-            padding: 1.5rem;
+            padding: 20px;
         }
 
         .modal-footer {
-            border-top: 1px solid var(--border-color);
-            padding: 1rem 1.5rem;
+            border-top: 1px solid var(--border-lt);
+            padding: 14px 20px;
             background: var(--gray-50);
         }
 
         .alert {
-            border-radius: 12px;
+            border-radius: var(--radius-sm);
             border: none;
-            border-left: 4px solid;
-            padding: 1rem 1.25rem;
-            margin-bottom: 1.5rem;
+            padding: 13px 18px;
+            margin-bottom: 20px;
+            font-size: .875rem;
+            font-weight: 500;
+            display: flex;
+            align-items: center;
+            gap: 10px;
         }
 
         .alert-danger {
-            background: #fef2f2;
-            border-left-color: var(--danger);
+            background: rgba(239, 68, 68, 0.08);
             color: #991b1b;
+            border-left: 3px solid var(--accent-red);
         }
 
         .alert-success {
-            background: #f0fdf4;
-            border-left-color: var(--success);
+            background: #ecfdf5;
             color: #166534;
+            border-left: 3px solid var(--green-500);
+        }
+
+        .alert i {
+            flex-shrink: 0;
         }
 
         h5, h6 {
-            font-family: 'Poppins', sans-serif;
-            font-weight: 600;
+            font-family: 'Syne', sans-serif;
+            font-weight: 700;
         }
 
         .section-title {
@@ -564,7 +560,26 @@ $csrf_token = generateCSRFToken();
         }
 
         .section-title i {
-            color: var(--primary);
+            color: var(--accent-blue);
+        }
+
+        .empty-state {
+            text-align: center;
+            padding: 48px 16px;
+        }
+
+        .empty-state i {
+            color: var(--accent-blue);
+            margin-bottom: 16px;
+        }
+
+        .empty-state h5 {
+            color: var(--gray-600);
+            margin-bottom: 8px;
+        }
+
+        .empty-state p {
+            color: var(--gray-500);
         }
 
         @media (max-width: 1200px) {
@@ -603,14 +618,15 @@ $csrf_token = generateCSRFToken();
     
     <div class="main-content">
         <div class="page-header">
-            <div class="row align-items-center">
-                <div class="col">
-                    <h2 class="mb-0">
-                        <i class="fas fa-users-cog me-2"></i>User Management
+            <div class="page-header-inner">
+                <div>
+                    <h2>
+                        <i class="fas fa-users-cog"></i>
+                        User Management
                     </h2>
-                    <p class="mb-0 subtitle">Manage system user accounts and permissions</p>
+                    <p class="subtitle">Manage system user accounts and permissions</p>
                 </div>
-                <div class="col-auto">
+                <div>
                     <button class="btn btn-light" data-bs-toggle="modal" data-bs-target="#createUserModal">
                         <i class="fas fa-plus me-2"></i>Create New User
                     </button>
@@ -627,67 +643,26 @@ $csrf_token = generateCSRFToken();
         
         <?php if ($success_message): ?>
             <div class="alert alert-success">
-                <i class="fas fa-check-circle me-2"></i><?php echo $success_message; ?>
+                <i class="fas fa-check-circle"></i><?php echo $success_message; ?>
             </div>
         <?php endif; ?>
         
-        <!-- User Statistics -->
-        <section class="content-section">
-        <div class="stats-grid">
-            <div class="card stats-card">
-                <div class="card-body">
-                    <div class="stats-icon-bg" style="background: rgba(6, 150, 104, 0.1); color: var(--primary);">
-                        <i class="fas fa-users"></i>
-                    </div>
-                    <div class="stats-number"><?php echo number_format($stats['total_users']); ?></div>
-                    <div class="stats-label">Total Users</div>
-                </div>
-            </div>
-            <div class="card stats-card">
-                <div class="card-body">
-                    <div class="stats-icon-bg" style="background: rgba(16, 185, 129, 0.1); color: var(--success);">
-                        <i class="fas fa-check-circle"></i>
-                    </div>
-                    <div class="stats-number"><?php echo number_format($stats['active_users']); ?></div>
-                    <div class="stats-label">Active Users</div>
-                </div>
-            </div>
-            <div class="card stats-card">
-                <div class="card-body">
-                    <div class="stats-icon-bg" style="background: rgba(239, 68, 68, 0.1); color: var(--danger);">
-                        <i class="fas fa-user-shield"></i>
-                    </div>
-                    <div class="stats-number"><?php echo number_format($stats['admin_count']); ?></div>
-                    <div class="stats-label">Administrators</div>
-                </div>
-            </div>
-            <div class="card stats-card">
-                <div class="card-body">
-                    <div class="stats-icon-bg" style="background: rgba(59, 130, 246, 0.1); color: var(--info);">
-                        <i class="fas fa-user-tie"></i>
-                    </div>
-                    <div class="stats-number"><?php echo number_format($stats['supervisor_count'] + $stats['guard_count']); ?></div>
-                    <div class="stats-label">Staff Members</div>
-                </div>
-            </div>
-        </div>
-        </section>
-        
         <!-- Users List -->
         <section class="content-section">
-        <div class="card user-card">
+        <div class="card">
             <div class="card-header">
-                <h5 class="mb-0">
-                    <i class="fas fa-list me-2"></i>System Users
+                <h5>
+                    <i class="fas fa-list"></i>System Users
                     <span class="badge bg-primary ms-2"><?php echo count($users); ?></span>
                 </h5>
             </div>
             <div class="card-body">
                 <?php if (empty($users)): ?>
-                    <div class="text-center py-5">
-                        <i class="fas fa-users-slash fa-3x text-muted mb-3"></i>
-                        <p class="text-muted mb-3">No users found in the system.</p>
-                        <button class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#createUserModal">
+                    <div class="empty-state">
+                        <i class="fas fa-users-slash fa-3x"></i>
+                        <h5>No Users Found</h5>
+                        <p class="text-muted">No system users have been created yet.</p>
+                        <button class="btn btn-primary mt-3" data-bs-toggle="modal" data-bs-target="#createUserModal">
                             <i class="fas fa-plus me-2"></i>Create First User
                         </button>
                     </div>
@@ -960,5 +935,7 @@ $csrf_token = generateCSRFToken();
             new bootstrap.Modal(document.getElementById('deleteUserModal')).show();
         }
     </script>
+    
+    <?php include '../includes/chat-widget.php'; ?>
 </body>
 </html>

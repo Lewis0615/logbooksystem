@@ -1,149 +1,126 @@
 <?php
 /**
- * Visitor AJAX Handler
+ * Visitor Management AJAX Endpoint
  * St. Dominic Savio College - Visitor Management System
+ * Handles real-time visitor count and security logging
  */
 
-header('Content-Type: application/json');
 require_once '../config/config.php';
 require_once '../config/auth.php';
 
-// Check authentication
-if (!$auth->isLoggedIn()) {
-    http_response_code(401);
-    echo json_encode(['success' => false, 'message' => 'Not authenticated']);
-    exit();
-}
+// Set JSON header
+header('Content-Type: application/json');
 
-$response = ['success' => false, 'message' => '', 'data' => null];
+// Get action from POST or GET
+$action = $_POST['action'] ?? $_GET['action'] ?? '';
 
 try {
-    $action = $_POST['action'] ?? $_GET['action'] ?? '';
-    
     switch ($action) {
         case 'get_current_count':
             // Get current visitor count
-            $count = $db->fetch("SELECT COUNT(*) as count FROM visits WHERE status = 'checked_in'")['count'];
+            $current_visitors = $db->fetch(
+                "SELECT COUNT(*) as count FROM visits 
+                 WHERE status = 'checked_in'", 
+                []
+            );
             
-            // Get recent blacklist attempts (last 24 hours)
-            $blacklist_attempts = $db->fetch("
-                SELECT COUNT(*) as count 
-                FROM activity_logs 
-                WHERE action = 'BLACKLIST_ATTEMPT' 
-                AND created_at >= DATE_SUB(NOW(), INTERVAL 24 HOUR)
-            ")['count'];
+            // Get recent blacklist attempts (today)
+            $blacklist_attempts = $db->fetch(
+                "SELECT COUNT(*) as count FROM blacklist 
+                 WHERE DATE(created_at) = CURDATE() 
+                 AND status = 'active'", 
+                []
+            );
             
-            // Get overstayed visitors
-            $overstayed = $db->fetch("
-                SELECT COUNT(*) as count 
-                FROM visits 
-                WHERE status = 'checked_in' 
-                AND NOW() > expected_checkout_time
-            ")['count'];
-            
-            $response = [
+            echo json_encode([
                 'success' => true,
-                'count' => (int)$count,
-                'blacklist_attempts' => (int)$blacklist_attempts,
-                'overstayed' => (int)$overstayed,
-                'message' => 'Visitor count retrieved successfully'
-            ];
+                'count' => (int)($current_visitors['count'] ?? 0),
+                'blacklist_attempts' => (int)($blacklist_attempts['count'] ?? 0)
+            ]);
             break;
             
-        case 'get_recent_visitors':
-            // Get recent check-ins (last 10)
-            $recent_visitors = $db->fetchAll("
-                SELECT v.visit_pass, v.check_in_time,
-                       vis.first_name, vis.last_name, vis.company_organization,
-                       v.person_to_visit, v.purpose
-                FROM visits v
-                JOIN visitors vis ON v.visitor_id = vis.id
-                WHERE v.status = 'checked_in'
-                ORDER BY v.check_in_time DESC
-                LIMIT 10
-            ");
-            
-            $response = [
-                'success' => true,
-                'data' => $recent_visitors,
-                'message' => 'Recent visitors retrieved successfully'
-            ];
-            break;
-            
-        case 'search_visitor':
-            $search_term = $_POST['search'] ?? '';
-            
-            if (empty($search_term)) {
-                $response['message'] = 'Search term is required';
+        case 'log_security_contact':
+            // Check if user is logged in for security logging
+            if (!$auth->isLoggedIn()) {
+                echo json_encode([
+                    'success' => false,
+                    'error' => 'Authentication required for security logging'
+                ]);
                 break;
             }
             
-            // Search for visitors
-            $visitors = $db->fetchAll("
-                SELECT vis.*, 
-                       v.id as visit_id, v.status, v.visit_pass, v.check_in_time
-                FROM visitors vis
-                LEFT JOIN visits v ON vis.id = v.visitor_id AND v.status = 'checked_in'
-                WHERE vis.first_name LIKE ? 
-                   OR vis.last_name LIKE ? 
-                   OR vis.phone LIKE ?
-                   OR v.visit_pass LIKE ?
-                ORDER BY v.check_in_time DESC
-                LIMIT 20
-            ", ["%$search_term%", "%$search_term%", "%$search_term%", "%$search_term%"]);
+            $reason = $_POST['reason'] ?? 'unknown';
+            $user_id = $_SESSION['user_id'] ?? null;
             
-            $response = [
+            if ($user_id) {
+                $auth->logActivity($user_id, 'SECURITY_CONTACT', 
+                    "Emergency security contact initiated: " . $reason);
+            }
+            
+            echo json_encode([
                 'success' => true,
-                'data' => $visitors,
-                'message' => 'Search completed successfully'
-            ];
+                'message' => 'Security contact logged successfully'
+            ]);
             break;
             
-        case 'check_blacklist':
-            $phone = $_POST['phone'] ?? '';
-            $visitor_id = (int)($_POST['visitor_id'] ?? 0);
+        case 'get_visitor_stats':
+            // Get comprehensive visitor statistics
+            $stats = [];
             
-            if (empty($phone) && $visitor_id <= 0) {
-                $response['message'] = 'Phone number or visitor ID is required';
-                break;
-            }
+            // Today's check-ins
+            $today_checkins = $db->fetch(
+                "SELECT COUNT(*) as count FROM visits 
+                 WHERE DATE(check_in_time) = CURDATE()", 
+                []
+            );
+            $stats['today_checkins'] = (int)($today_checkins['count'] ?? 0);
             
-            $sql = "SELECT * FROM blacklist WHERE status = 'active' 
-                    AND (is_permanent = 1 OR expiry_date >= CURDATE())";
-            $params = [];
+            // Current visitors
+            $current_visitors = $db->fetch(
+                "SELECT COUNT(*) as count FROM visits 
+                 WHERE status = 'checked_in'", 
+                []
+            );
+            $stats['current_visitors'] = (int)($current_visitors['count'] ?? 0);
             
-            if ($visitor_id > 0) {
-                $sql .= " AND visitor_id = ?";
-                $params[] = $visitor_id;
-            } elseif (!empty($phone)) {
-                $sql .= " AND phone = ?";
-                $params[] = $phone;
-            }
+            // Today's checkouts
+            $today_checkouts = $db->fetch(
+                "SELECT COUNT(*) as count FROM visits 
+                 WHERE DATE(check_out_time) = CURDATE()", 
+                []
+            );
+            $stats['today_checkouts'] = (int)($today_checkouts['count'] ?? 0);
             
-            $blacklist_entry = $db->fetch($sql, $params);
+            // Overdue visitors (expected checkout time passed)
+            $overdue_visitors = $db->fetch(
+                "SELECT COUNT(*) as count FROM visits 
+                 WHERE status = 'checked_in' 
+                 AND expected_checkout_time < NOW()", 
+                []
+            );
+            $stats['overdue_visitors'] = (int)($overdue_visitors['count'] ?? 0);
             
-            $response = [
+            echo json_encode([
                 'success' => true,
-                'is_blacklisted' => !empty($blacklist_entry),
-                'data' => $blacklist_entry,
-                'message' => $blacklist_entry ? 'Visitor is blacklisted' : 'Visitor is not blacklisted'
-            ];
+                'stats' => $stats
+            ]);
             break;
             
         default:
-            $response['message'] = 'Invalid action specified';
+            echo json_encode([
+                'success' => false,
+                'error' => 'Invalid action specified'
+            ]);
             break;
     }
     
 } catch (Exception $e) {
-    $response = [
+    // Log the error
+    error_log("Visitor AJAX Error: " . $e->getMessage());
+    
+    echo json_encode([
         'success' => false,
-        'message' => 'Server error: ' . $e->getMessage(),
-        'data' => null
-    ];
-    error_log("Visitor AJAX error: " . $e->getMessage());
+        'error' => 'An error occurred processing your request'
+    ]);
 }
-
-echo json_encode($response);
-exit();
 ?>

@@ -15,11 +15,10 @@ $current_dir = basename(dirname($_SERVER['PHP_SELF']));
     <div class="sidebar-header">
         <div class="sidebar-brand">
             <div class="brand-icon">
-                <i class="fas fa-user-shield"></i>
+                <img src="../assets/images/sdsclogo.png" alt="SDC Logo">
             </div>
             <div class="brand-text">
                 <h5 class="mb-0"><?php echo APP_NAME; ?></h5>
-                <small class="text-muted">Guard Portal</small>
             </div>
         </div>
         <button class="sidebar-toggle d-lg-none" onclick="toggleSidebar()">
@@ -30,59 +29,22 @@ $current_dir = basename(dirname($_SERVER['PHP_SELF']));
     <!-- Navigation Menu -->
     <nav class="sidebar-nav">
         <ul class="nav-list">
-            <!-- Quick Check In -->
+            <!-- Visitor Management -->
             <li class="nav-item">
-                <a href="checkin.php" class="nav-link <?php echo ($current_page == 'checkin.php') ? 'active' : ''; ?>">
-                    <div class="nav-icon">
-                        <i class="fas fa-user-plus"></i>
-                    </div>
-                    <span class="nav-text">Quick Check In</span>
-                </a>
-            </li>
-
-            <!-- Quick Check Out -->
-            <li class="nav-item">
-                <a href="checkout.php" class="nav-link <?php echo ($current_page == 'checkout.php') ? 'active' : ''; ?>">
-                    <div class="nav-icon">
-                        <i class="fas fa-user-minus"></i>
-                    </div>
-                    <span class="nav-text">Quick Check Out</span>
-                </a>
-            </li>
-
-            <!-- Current Visitors -->
-            <li class="nav-item">
-                <a href="current-visitors.php" class="nav-link <?php echo ($current_page == 'current-visitors.php') ? 'active' : ''; ?>">
+                <a href="guard-visitor-management.php" class="nav-link <?php echo ($current_page == 'guard-visitor-management.php') ? 'active' : ''; ?>">
                     <div class="nav-icon">
                         <i class="fas fa-users"></i>
                     </div>
-                    <span class="nav-text">Current Visitors</span>
+                    <span class="nav-text">Visitor Management</span>
                 </a>
             </li>
-
-            <li class="nav-divider"></li>
-
-            <!-- Reports Section -->
-            <li class="nav-section-title">
-                <span>Reports</span>
-            </li>
             <li class="nav-item">
-                <a href="blacklist.php" class="nav-link <?php echo ($current_page == 'blacklist.php') ? 'active' : ''; ?>">
+                <a href="guard-blacklist.php" class="nav-link <?php echo ($current_page == 'guard-blacklist.php') ? 'active' : ''; ?>">
                     <div class="nav-icon">
                         <i class="fas fa-ban"></i>
                     </div>
-                    <span class="nav-text">Blacklist</span>
+                    <span class="nav-text">Blocklist</span>
                     <span class="badge bg-danger ms-auto" id="blacklistCount" style="display: none;"></span>
-                </a>
-            </li>
-            <!-- Audit Trail -->
-            <li class="nav-item">
-                <a href="<?php echo ($current_dir == 'admin') ? '' : '../admin/'; ?>reports.php" 
-                   class="nav-link <?php echo ($current_page == 'reports.php' || $current_page == 'guard-reports.php') ? 'active' : ''; ?>">
-                    <div class="nav-icon">
-                        <i class="fas fa-clipboard-list"></i>
-                    </div>
-                    <span class="nav-text">Audit Trail</span>
                 </a>
             </li>
         </ul>
@@ -114,13 +76,9 @@ $current_dir = basename(dirname($_SERVER['PHP_SELF']));
                     <div class="account-info">
                         <div class="account-name"><?php echo htmlspecialchars($_SESSION['first_name'] ?? 'Guard'); ?></div>
                         <div class="account-role">
-                            <i class="fas fa-shield-alt me-1" aria-hidden="true"></i>
                             <span>Security Guard</span>
                         </div>
-                        <div class="account-status">
-                            <span class="status-text">On Duty</span>
-                            <span class="last-activity" id="lastActivity">Active now</span>
-                        </div>
+                        
                     </div>
                     <div class="dropdown-indicator">
                         <i class="fas fa-chevron-up" aria-hidden="true"></i>
@@ -132,7 +90,7 @@ $current_dir = basename(dirname($_SERVER['PHP_SELF']));
                     <!-- Account Section -->
                     <li class="dropdown-header">
                         <div class="header-content">
-                            <i class="fas fa-user-circle me-2" aria-hidden="true"></i>
+                            
                             <span>Guard Account</span>
                         </div>
                     </li>
@@ -140,9 +98,8 @@ $current_dir = basename(dirname($_SERVER['PHP_SELF']));
                     <!-- Profile Settings -->
                     <li>
                         <a class="dropdown-item enhanced-dropdown-item" 
-                           href="#" 
-                           role="menuitem"
-                           onclick="showProfileSettings(); return false;">
+                           href="guard-profile.php" 
+                           role="menuitem">
                             <div class="item-icon">
                                 <i class="fas fa-user-edit" aria-hidden="true"></i>
                             </div>
@@ -155,94 +112,6 @@ $current_dir = basename(dirname($_SERVER['PHP_SELF']));
                             </div>
                         </a>
                     </li>
-                    
-                    <!-- Shift Information -->
-                    <li>
-                        <a class="dropdown-item enhanced-dropdown-item" 
-                           href="#" 
-                           role="menuitem"
-                           onclick="showShiftInfo(); return false;">
-                            <div class="item-icon">
-                                <i class="fas fa-clock" aria-hidden="true"></i>
-                            </div>
-                            <div class="item-content">
-                                <div class="item-title">Shift Information</div>
-                                <div class="item-subtitle">View current shift details</div>
-                            </div>
-                            <div class="item-arrow">
-                                <i class="fas fa-chevron-right" aria-hidden="true"></i>
-                            </div>
-                        </a>
-                    </li>
-                    
-                    <!-- Duty Log -->
-                    <li>
-                        <a class="dropdown-item enhanced-dropdown-item" 
-                           href="#" 
-                           role="menuitem"
-                           onclick="showDutyLog(); return false;">
-                            <div class="item-icon">
-                                <i class="fas fa-clipboard-list" aria-hidden="true"></i>
-                            </div>
-                            <div class="item-content">
-                                <div class="item-title">Duty Log</div>
-                                <div class="item-subtitle">Record incidents & notes</div>
-                            </div>
-                            <div class="item-arrow">
-                                <i class="fas fa-chevron-right" aria-hidden="true"></i>
-                            </div>
-                        </a>
-                    </li>
-                    
-                    <li><hr class="dropdown-divider"></li>
-                    
-                    <!-- Tools Section -->
-                    <li class="dropdown-header">
-                        <div class="header-content">
-                            <i class="fas fa-tools me-2" aria-hidden="true"></i>
-                            <span>Security Tools</span>
-                        </div>
-                    </li>
-                    
-                    <!-- Emergency Contacts -->
-                    <li>
-                        <a class="dropdown-item enhanced-dropdown-item" 
-                           href="#" 
-                           role="menuitem"
-                           onclick="showEmergencyContacts(); return false;">
-                            <div class="item-icon emergency-icon">
-                                <i class="fas fa-phone-alt" aria-hidden="true"></i>
-                            </div>
-                            <div class="item-content">
-                                <div class="item-title">Emergency Contacts</div>
-                                <div class="item-subtitle">Quick access to contacts</div>
-                            </div>
-                            <div class="item-arrow">
-                                <i class="fas fa-chevron-right" aria-hidden="true"></i>
-                            </div>
-                        </a>
-                    </li>
-                    
-                    <!-- Security Protocols -->
-                    <li>
-                        <a class="dropdown-item enhanced-dropdown-item" 
-                           href="#" 
-                           role="menuitem"
-                           onclick="showSecurityProtocols(); return false;">
-                            <div class="item-icon">
-                                <i class="fas fa-book-open" aria-hidden="true"></i>
-                            </div>
-                            <div class="item-content">
-                                <div class="item-title">Security Protocols</div>
-                                <div class="item-subtitle">View procedures & guidelines</div>
-                            </div>
-                            <div class="item-arrow">
-                                <i class="fas fa-chevron-right" aria-hidden="true"></i>
-                            </div>
-                        </a>
-                    </li>
-                    
-                    <li><hr class="dropdown-divider"></li>
                     
                     <!-- Logout Section -->
                     <li>
@@ -1534,7 +1403,123 @@ $current_dir = basename(dirname($_SERVER['PHP_SELF']));
     border-color: rgba(255, 255, 255, 0.25);
     outline: none;
 }
+
+/* ── LOGOUT CONFIRM MODAL ── */
+#logoutModal {
+    display: none; position: fixed; inset: 0; z-index: 9999;
+    align-items: center; justify-content: center;
+    background: rgba(0,0,0,.6); backdrop-filter: blur(6px);
+}
+#logoutModal.show { display: flex; }
+.lo-dialog {
+    background: #fff; border-radius: 20px; width: 100%; max-width: 400px;
+    box-shadow: 0 28px 60px rgba(0,0,0,.22); overflow: hidden;
+    animation: loSlide .22s cubic-bezier(.34,1.56,.64,1);
+}
+@keyframes loSlide { from { opacity:0; transform:scale(.85) translateY(24px); } to { opacity:1; transform:none; } }
+.lo-header {
+    background: linear-gradient(135deg, #dc2626, #ef4444);
+    padding: 30px 28px 24px; text-align: center; position: relative; overflow: hidden;
+}
+.lo-header::before {
+    content:''; position:absolute; top:-50px; right:-50px;
+    width:160px; height:160px; border-radius:50%; background: rgba(255,255,255,.08);
+}
+.lo-header::after {
+    content:''; position:absolute; bottom:-30px; left:-30px;
+    width:100px; height:100px; border-radius:50%; background: rgba(255,255,255,.06);
+}
+.lo-icon-wrap {
+    position:relative; z-index:1;
+    width:72px; height:72px; border-radius:20px;
+    background: rgba(255,255,255,.18); border: 2px solid rgba(255,255,255,.3);
+    display:flex; align-items:center; justify-content:center;
+    margin: 0 auto 14px;
+    box-shadow: 0 8px 20px rgba(0,0,0,.15);
+}
+.lo-icon-wrap i { font-size:1.8rem; color:#fff; }
+.lo-header h5 {
+    position:relative; z-index:1;
+    color:#fff; font-family:'Syne',sans-serif; font-size:1.2rem; font-weight:800; margin:0 0 5px;
+}
+.lo-header p { position:relative; z-index:1; color:rgba(255,255,255,.75); font-size:.83rem; margin:0; }
+.lo-body { padding:24px 28px 4px; }
+.lo-user-tag {
+    display:flex; align-items:center; gap:12px;
+    background:#fef2f2; border:1px solid #fecaca; border-radius:12px;
+    padding:14px 16px; margin-bottom:16px;
+}
+.lo-user-icon {
+    width:42px; height:42px; border-radius:12px;
+    background: linear-gradient(135deg,#dc2626,#ef4444);
+    display:flex; align-items:center; justify-content:center; flex-shrink:0;
+}
+.lo-user-icon i { color:#fff; font-size:1rem; }
+.lo-user-info .lo-name { font-weight:700; font-size:.95rem; color:#1e293b; }
+.lo-user-info .lo-sub  { font-size:.78rem; color:#64748b; margin-top:2px; }
+.lo-warn {
+    background:#fff7ed; border:1px solid #fed7aa; border-radius:10px;
+    padding:12px 14px; font-size:.82rem; color:#9a3412;
+    display:flex; align-items:flex-start; gap:10px; line-height:1.5; margin-bottom:20px;
+}
+.lo-warn i { flex-shrink:0; margin-top:2px; color:#f97316; }
+.lo-footer { padding:4px 28px 24px; display:flex; gap:10px; }
+.lo-btn-cancel {
+    flex:1; padding:12px; border:1.5px solid #e2e8f0; border-radius:10px;
+    background:#fff; font-weight:600; font-size:.9rem; color:#475569; cursor:pointer;
+    transition:all .2s; font-family:inherit;
+}
+.lo-btn-cancel:hover { background:#f1f5f9; border-color:#cbd5e1; }
+.lo-btn-confirm {
+    flex:2; padding:12px; border:none; border-radius:10px;
+    background:linear-gradient(135deg,#dc2626,#ef4444);
+    font-weight:700; font-size:.9rem; color:#fff; cursor:pointer;
+    transition:all .2s; box-shadow:0 4px 14px rgba(239,68,68,.3);
+    display:flex; align-items:center; justify-content:center; gap:8px; font-family:inherit;
+}
+.lo-btn-confirm:hover  { transform:translateY(-1px); box-shadow:0 6px 18px rgba(239,68,68,.45); }
+.lo-btn-confirm:disabled { opacity:.65; cursor:not-allowed; transform:none; }
+
+/* Brand logo image */
+.brand-icon {
+    background: #fff !important;
+    padding: 3px;
+}
+.brand-icon img {
+    width: 100%;
+    height: 100%;
+    object-fit: contain;
+    display: block;
+}
 </style>
+
+<!-- LOGOUT CONFIRMATION MODAL -->
+<div id="logoutModal" role="dialog" aria-modal="true" aria-labelledby="loModalTitle">
+    <div class="lo-dialog">
+        <div class="lo-header">
+            <div class="lo-icon-wrap"><i class="fas fa-power-off"></i></div>
+            <h5 id="loModalTitle">Sign Out</h5>
+            <p>You are about to end your shift</p>
+        </div>
+        <div class="lo-body">
+            <div class="lo-user-tag">
+                <div class="lo-user-icon"><i class="fas fa-user-lock"></i></div>
+                <div class="lo-user-info">
+                    <div class="lo-name"><?php echo htmlspecialchars($_SESSION['first_name'] ?? 'Guard'); ?></div>
+                    <div class="lo-sub">Your active shift session will be ended</div>
+                </div>
+            </div>
+            <div class="lo-warn">
+                <i class="fas fa-exclamation-triangle"></i>
+                <span>Make sure all visitors are checked out and your duty handover is complete before logging out.</span>
+            </div>
+        </div>
+        <div class="lo-footer">
+            <button class="lo-btn-cancel" id="loCancelBtn"><i class="fas fa-arrow-left me-1"></i> Stay</button>
+            <button class="lo-btn-confirm" id="loConfirmBtn"><i class="fas fa-power-off"></i> Yes, Sign Out</button>
+        </div>
+    </div>
+</div>
 
 <script>
 // jQuery Compatibility Check and Enhanced Fallback
@@ -1558,8 +1543,77 @@ if (typeof jQuery === 'undefined') {
         if (typeof selector === 'string') {
             const elements = document.querySelectorAll(selector);
             const element = elements[0];
+            
             return {
                 length: elements.length,
+                0: element,
+                addClass: function(className) {
+                    elements.forEach(el => el.classList.add(className));
+                    return this;
+                },
+                removeClass: function(className) {
+                    elements.forEach(el => el.classList.remove(className));
+                    return this;
+                },
+                hasClass: function(className) {
+                    return element ? element.classList.contains(className) : false;
+                },
+                toggle: function(show) {
+                    if (element) {
+                        element.style.display = show ? 'block' : 'none';
+                    }
+                    return this;
+                },
+                text: function(txt) {
+                    if (txt !== undefined) {
+                        if (element) element.textContent = txt;
+                        return this;
+                    }
+                    return element ? element.textContent : '';
+                },
+                val: function() {
+                    return element ? element.value : '';
+                },
+                html: function(html) {
+                    if (html !== undefined) {
+                        if (element) element.innerHTML = html;
+                        return this;
+                    }
+                    return element ? element.innerHTML : '';
+                },
+                closest: function(sel) {
+                    return $(element ? element.closest(sel) : null);
+                },
+                prop: function(prop, value) {
+                    if (value !== undefined) {
+                        if (element) element[prop] = value;
+                        return this;
+                    }
+                    return element ? element[prop] : undefined;
+                },
+                fadeOut: function(speed, callback) {
+                    if (element) {
+                        element.style.transition = 'opacity ' + (speed || 300) + 'ms';
+                        element.style.opacity = '0';
+                        setTimeout(() => {
+                            element.style.display = 'none';
+                            if (callback) callback.call(element);
+                        }, speed || 300);
+                    }
+                    return this;
+                },
+                remove: function() {
+                    elements.forEach(el => el.remove());
+                    return this;
+                },
+                on: function(event, handler) {
+                    elements.forEach(el => el.addEventListener(event, handler));
+                    return this;
+                },
+                each: function(callback) {
+                    elements.forEach((el, index) => callback.call(el, index, el));
+                    return this;
+                },
                 modal: function(action) {
                     if (element && typeof bootstrap !== 'undefined') {
                         const modal = bootstrap.Modal.getOrCreateInstance(element);
@@ -1582,6 +1636,8 @@ if (typeof jQuery === 'undefined') {
         }
         
         return {
+            addClass: function() { return this; },
+            removeClass: function() { return this; },
             modal: function() { return this; },
             append: function() { return this; },
             prepend: function() { return this; }
@@ -1766,7 +1822,7 @@ function refreshVisitorCount() {
         showNotification('Network error', 'error');
         
         // Fallback: try alternative endpoint
-        fetch('../ajax/get-visitor-count.php')
+        fetch('../ajax/visitor-ajax.php?action=get_current_count')
         .then(response => response.json())
         .then(data => {
             if (data.count !== undefined) {
@@ -2208,27 +2264,24 @@ function initializeEnhancedGuardAccount() {
 }
 
 function confirmLogout() {
-    const confirmed = confirm('Are you sure you want to logout?');
-    if (confirmed) {
-        // Show loading state
-        const logoutBtn = document.querySelector('.logout-item');
-        if (logoutBtn) {
-            logoutBtn.innerHTML = `
-                <div class="item-icon">
-                    <i class="fa fa-spinner fa-spin"></i>
-                </div>
-                <div class="item-content">
-                    <div class="item-title">Logging out...</div>
-                    <div class="item-subtitle">Please wait...</div>
-                </div>
-            `;
-        }
-        
-        // Redirect after animation
-        setTimeout(function() {
-            window.location.href = 'logout.php';
-        }, 1000);
-    }
+    const modal = document.getElementById('logoutModal');
+    modal.classList.add('show');
+
+    const confirmBtn = document.getElementById('loConfirmBtn');
+    confirmBtn.disabled = false;
+    confirmBtn.innerHTML = '<i class="fas fa-power-off"></i> Yes, Sign Out';
+    confirmBtn.onclick = function() {
+        confirmBtn.disabled = true;
+        confirmBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Signing out...';
+        window.location.href = 'logout.php';
+    };
+
+    document.getElementById('loCancelBtn').onclick = function() {
+        modal.classList.remove('show');
+    };
+    modal.onclick = function(e) {
+        if (e.target === modal) modal.classList.remove('show');
+    };
     return false;
 }
 

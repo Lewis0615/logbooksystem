@@ -65,4 +65,7 @@ class Database {
 
 // Global database instance
 $db = new Database();
+
+// Also provide PDO connection for direct access (used by chat system)
+$pdo = $db->getConnection();
 ?>
