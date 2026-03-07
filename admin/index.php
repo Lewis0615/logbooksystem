@@ -1,9 +1,9 @@
 <?php
 /**
- * Admin Directory Index
+ * Admin/Security Guard Directory Index
  * St. Dominic Savio College - Visitor Management System
  * 
- * Redirects to admin login page
+ * Redirects to login page
  */
 
 // Redirect to login page
