@@ -135,7 +135,7 @@ $sys = getAllSystemSettings();
 // Live campus occupancy (total people currently checked in, counting group_size for group visits)
 try {
     $occupancyRow = $db->fetch(
-        "SELECT COALESCE(SUM(CASE WHEN is_group_visit = 1 THEN group_size ELSE 1 END), 0) AS total_people
+        "SELECT COALESCE(SUM(CASE WHEN is_group_visit = 1 THEN COALESCE(NULLIF(group_size, 0), 1) ELSE 1 END), 0) AS total_people
          FROM visits WHERE status = 'checked_in'"
     );
     $current_campus_people = (int)($occupancyRow['total_people'] ?? 0);
@@ -160,7 +160,8 @@ $dress_code_items_db = getSettingList('dress_code_items', $_dc_default);
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>System Settings - <?php echo APP_NAME; ?></title>
+    <title>System Settings</title>
+    <link rel="icon" type="image/png" href="/logbooksystem/assets/images/sdsclogo.png">
     <link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;500;600;700;800&family=DM+Sans:wght@300;400;500;600;700&display=swap" rel="stylesheet">
     <link href="../assets/css/bootstrap.min.css" rel="stylesheet">
     <link href="../assets/css/vendor/font-awesome.min.css" rel="stylesheet">
@@ -259,7 +260,7 @@ $dress_code_items_db = getSettingList('dress_code_items', $_dc_default);
         }
 
         .page-header h2 {
-            font-family: 'Syne', sans-serif;
+            font-family: 'Work Sans', sans-serif;
             font-size: 1.8rem;
             font-weight: 800;
             color: white;
@@ -303,7 +304,7 @@ $dress_code_items_db = getSettingList('dress_code_items', $_dc_default);
             font-size: 1.125rem;
             font-weight: 700;
             color: var(--gray-900);
-            font-family: 'Syne', sans-serif;
+            font-family: 'Work Sans', sans-serif;
         }
 
         .card-body {
@@ -449,7 +450,7 @@ $dress_code_items_db = getSettingList('dress_code_items', $_dc_default);
         }
 
         h5, h6 {
-            font-family: 'Syne', sans-serif;
+            font-family: 'Work Sans', sans-serif;
             font-weight: 700;
         }
 
@@ -488,7 +489,7 @@ $dress_code_items_db = getSettingList('dress_code_items', $_dc_default);
         .settings-group-header h6 {
             font-size: 1.05rem;
             font-weight: 700;
-            font-family: 'Syne', sans-serif;
+            font-family: 'Work Sans', sans-serif;
         }
 
         .text-primary {
@@ -1328,7 +1329,7 @@ $dress_code_items_db = getSettingList('dress_code_items', $_dc_default);
                         </div>
                         <div>
                             <h5 class="modal-title mb-0" id="dresscodeExampleModalLabel"
-                                style="font-family:'Syne',sans-serif;font-weight:800;color:#fff;font-size:1.2rem;letter-spacing:-.01em;">Dress Code Policy</h5>
+                                style="font-family:'Work Sans',sans-serif;font-weight:800;color:#fff;font-size:1.2rem;letter-spacing:-.01em;">Dress Code Policy</h5>
                             <p class="mb-0" style="color:rgba(255,255,255,.75);font-size:.8rem;">Reference guide for visitor attire requirements</p>
                         </div>
                     </div>

@@ -72,7 +72,6 @@ try {
             vis.phone,
             vis.email,
             vis.address,
-            vis.company_organization,
             vis.id_type,
             v.person_to_visit,
             v.purpose,

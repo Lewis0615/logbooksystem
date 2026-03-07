@@ -28,7 +28,7 @@ class Database {
                 ]
             );
         } catch(PDOException $e) {
-            die("Database Connection Failed: " . $e->getMessage());
+            throw new RuntimeException("Database Connection Failed: " . $e->getMessage());
         }
     }
     

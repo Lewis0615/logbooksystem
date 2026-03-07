@@ -178,7 +178,6 @@ CREATE TABLE `visitors` (
   `phone` varchar(20) NOT NULL,
   `email` varchar(150) DEFAULT NULL,
   `address` text DEFAULT NULL,
-  `company_organization` varchar(200) DEFAULT NULL,
   `id_type` varchar(50) DEFAULT NULL,
   `id_photo_path` varchar(255) DEFAULT NULL,
   `created_at` timestamp NOT NULL DEFAULT current_timestamp(),
@@ -189,7 +188,7 @@ CREATE TABLE `visitors` (
 -- Dumping data for table `visitors`
 --
 
-INSERT INTO `visitors` (`id`, `first_name`, `last_name`, `phone`, `email`, `address`, `company_organization`, `id_type`, `id_photo_path`, `created_at`, `updated_at`) VALUES
+INSERT INTO `visitors` (`id`, `first_name`, `last_name`, `phone`, `email`, `address`, `id_type`, `id_photo_path`, `created_at`, `updated_at`) VALUES
 (1, 'John', 'Lewis Oliquiano', '09771304647', NULL, 'Caloocan City', NULL, 'national_id', NULL, '2026-03-01 03:12:18', '2026-03-01 03:14:45'),
 (2, 'Shaira', 'Guadalupe', '09234134354', NULL, 'Navotas', NULL, 'national_id', NULL, '2026-03-01 04:34:15', '2026-03-01 04:34:15'),
 (3, 'John', 'Lloyd Delmo', '09235135456', NULL, 'Bagong Silang', NULL, 'national_id', 'assets/uploads/visitor-ids/id_1772363166_a4468636f45b.jpg', '2026-03-01 11:06:06', '2026-03-01 11:06:06'),

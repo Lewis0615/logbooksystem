@@ -1,4 +1,4 @@
-<?php
+﻿<?php
 /**
  * Guard Visitor Management Interface
  * St. Dominic Savio College - Visitor Management System
@@ -6,6 +6,7 @@
 
 require_once '../config/config.php';
 require_once '../config/auth.php';
+require_once '../config/settings.php';
 
 // Check authentication
 $auth->requireLogin('login.php');
@@ -37,15 +38,6 @@ if ($_POST && isset($_POST['checkin_existing_visitor'])) {
                 if ($existing_visit) {
                     $error_message = 'This visitor is already checked in.';
                 } else {
-                    // Block re-entry after check-out on the same day
-                    $checked_out_today = $db->fetch(
-                        "SELECT id FROM visits WHERE visitor_id = ? AND status = 'checked_out' AND DATE(check_in_time) = CURDATE()",
-                        [$visitor_id]
-                    );
-                    if ($checked_out_today) {
-                        $error_message = 'This visitor has already checked out today and cannot check in again.';
-                    } else
-                    {
                     $blacklisted = $db->fetch(
                         "SELECT * FROM blacklist WHERE 
                          (visitor_id = ? OR phone = ?) AND status = 'active' 
@@ -75,7 +67,6 @@ if ($_POST && isset($_POST['checkin_existing_visitor'])) {
                         
                         $success_message = "Visitor checked in successfully! Visitor Pass: $visitor_pass";
                     }
-                    } // end same-day re-entry check
                 }
             }
         } catch (Exception $e) {
@@ -207,16 +198,6 @@ if (isset($_GET['action']) && $_GET['action'] === 'checkin_existing' && isset($_
             exit;
         }
 
-        // Block re-entry after check-out on the same day
-        $checked_out_today = $db->fetch(
-            "SELECT id FROM visits WHERE visitor_id = ? AND status = 'checked_out' AND DATE(check_in_time) = CURDATE()",
-            [$visitor_id]
-        );
-        if ($checked_out_today) {
-            echo json_encode(['success' => false, 'message' => 'This visitor has already checked out today and cannot check in again.']);
-            exit;
-        }
-        
         $blacklisted = $db->fetch(
             "SELECT * FROM blacklist WHERE 
              (visitor_id = ? OR phone = ?) AND status = 'active' 
@@ -230,7 +211,21 @@ if (isset($_GET['action']) && $_GET['action'] === 'checkin_existing' && isset($_
             echo json_encode(['success' => false, 'message' => 'This visitor is blacklisted and cannot be checked in.']);
             exit;
         }
-        
+
+        // Campus capacity check
+        $maxCampusCapacity = (int)getSystemSetting('max_group_size', '0');
+        if ($maxCampusCapacity > 0) {
+            $occRow = $db->fetch(
+                "SELECT COALESCE(SUM(CASE WHEN is_group_visit = 1 THEN COALESCE(NULLIF(group_size, 0), 1) ELSE 1 END), 0) AS total_people
+                 FROM visits WHERE status = 'checked_in'"
+            );
+            $currentPeople = (int)($occRow['total_people'] ?? 0);
+            if (($currentPeople + 1) > $maxCampusCapacity) {
+                echo json_encode(['success' => false, 'message' => "Campus capacity limit of {$maxCampusCapacity} " . ($maxCampusCapacity === 1 ? 'visitor' : 'visitors') . ' has been reached. Check-ins are paused until someone checks out.']);
+                exit;
+            }
+        }
+
         $expected_duration = DEFAULT_VISIT_DURATION;
         $expected_checkout = date('Y-m-d H:i:s', strtotime("+$expected_duration minutes"));
         $visitor_pass = generateVisitorPass();
@@ -316,7 +311,8 @@ $csrf_token = generateCSRFToken();
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Visitor Management - <?php echo APP_NAME; ?></title>
+    <title>Visitor Management</title>
+    <link rel="icon" type="image/png" href="/logbooksystem/assets/images/sdsclogo.png">
     <link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&family=DM+Sans:ital,wght@0,300;0,400;0,500;0,600;1,400&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet">
     <link href="../assets/css/bootstrap.min.css" rel="stylesheet">
     <link href="../assets/css/vendor/font-awesome.min.css" rel="stylesheet">
@@ -425,7 +421,7 @@ $csrf_token = generateCSRFToken();
         }
 
         .page-header h2 {
-            font-family: 'Syne', sans-serif;
+            font-family: 'Work Sans', sans-serif;
             font-size: 1.8rem;
             font-weight: 800;
             color: #fff;
@@ -538,7 +534,7 @@ $csrf_token = generateCSRFToken();
         .stat-card.s-orange .stat-icon-wrap { background: var(--accent-orange-lt);  color: var(--accent-orange); }
 
         .stat-number {
-            font-family: 'Syne', sans-serif;
+            font-family: 'Work Sans', sans-serif;
             font-size: 2.6rem;
             font-weight: 800;
             line-height: 1;
@@ -578,7 +574,7 @@ $csrf_token = generateCSRFToken();
         }
 
         .card-header-title {
-            font-family: 'Syne', sans-serif;
+            font-family: 'Work Sans', sans-serif;
             font-size: .95rem;
             font-weight: 700;
             color: var(--gray-800);
@@ -691,7 +687,7 @@ $csrf_token = generateCSRFToken();
 
         .visitor-name {
             font-weight: 700;
-            color: var(--gray-900);
+            color: var(--gray-950);
             font-size: .9rem;
             margin-bottom: 2px;
         }
@@ -798,7 +794,7 @@ $csrf_token = generateCSRFToken();
             display: flex; align-items: center; justify-content: center;
             margin: 0 auto 14px; font-size: 22px; color: var(--gray-400);
         }
-        .empty-title { font-family: 'Syne', sans-serif; font-weight: 700; font-size: .95rem; color: var(--gray-700); margin-bottom: 6px; }
+        .empty-title { font-family: 'Work Sans', sans-serif; font-weight: 700; font-size: .95rem; color: var(--gray-700); margin-bottom: 6px; }
         .empty-sub { font-size: .8rem; color: var(--gray-400); max-width: 260px; margin: 0 auto; line-height: 1.6; }
 
         /* ─── REFRESH TOAST ─── */
@@ -833,363 +829,154 @@ $csrf_token = generateCSRFToken();
         ════════════════════════════════════════════════════ */
 
         /* Overlay control */
-        #visitorModal { display: none !important; }
-        #visitorModal.show {
-            display: block !important; position: fixed; top: 0; left: 0;
-            width: 100%; height: 100%; z-index: 1050;
-            overflow-y: auto; padding: 32px 16px;
-        }
-        .modal-backdrop { display: none !important; }
-        .modal-backdrop.show {
-            display: block !important; position: fixed; top: 0; left: 0;
-            width: 100%; height: 100%; z-index: 1040;
-            background: rgba(4, 12, 7, 0.80);
-            backdrop-filter: blur(6px);
-        }
-        body.modal-open { overflow: hidden; padding-right: 0 !important; }
+        #visitorModal { display:none !important; }
+        #visitorModal.show { display:block !important; position:fixed; top:0; left:0; width:100%; height:100%; z-index:1050; overflow-y:auto; padding:24px 16px; }
+        .modal-backdrop { display:none !important; }
+        .modal-backdrop.show { display:block !important; position:fixed; top:0; left:0; width:100%; height:100%; z-index:1040; background:rgba(0,0,0,.65); backdrop-filter:blur(6px); }
+        body.modal-open { overflow:hidden; padding-right:0 !important; }
 
         /* Dialog shell */
-        .modal-dialog {
-            position: relative; margin: 0 auto; max-width: 900px;
-            pointer-events: none;
-            animation: vmSlideUp .4s cubic-bezier(.22,.68,0,1.15) both;
+        #visitorModal .modal-dialog {
+            position:relative; margin:0 auto; max-width:700px; pointer-events:none;
+            animation:vmSlideUp .35s cubic-bezier(.16,1,.3,1) both;
         }
         @keyframes vmSlideUp {
-            from { opacity:0; transform: translateY(28px) scale(.96); }
-            to   { opacity:1; transform: translateY(0) scale(1); }
+            from { opacity:0; transform:translateY(24px) scale(.98); }
+            to   { opacity:1; transform:translateY(0) scale(1); }
+        }
+        #visitorModal .modal-content {
+            pointer-events:auto; background:#fff;
+            border-radius:20px !important; border:none !important;
+            box-shadow:0 32px 80px rgba(0,0,0,.4), 0 0 0 1px rgba(255,255,255,.05) !important;
+            overflow:hidden; display:flex; flex-direction:column;
+            max-height:92vh;
         }
 
-        .modal-content {
-            pointer-events: auto;
-            background: #fff !important;
-            border-radius: 20px !important;
-            box-shadow: 0 32px 100px rgba(0,0,0,.5), 0 8px 24px rgba(0,0,0,.25) !important;
-            border: none !important;
-            overflow: hidden;
-            display: flex; flex-direction: column;
+        /* â”€â”€ HEADER â”€â”€ */
+        #visitorModal .modal-header {
+            background:linear-gradient(135deg,#1a2744 0%,#1e3a5f 100%) !important;
+            padding:24px 28px 22px !important;
+            border-bottom:none !important;
+            position:relative; overflow:hidden;
+            flex-direction:column !important; align-items:stretch !important;
         }
+        #visitorModal .modal-header::before {
+            content:''; position:absolute; top:-40px; right:-40px;
+            width:180px; height:180px; border-radius:50%;
+            background:rgba(255,255,255,.04); pointer-events:none;
+        }
+        #visitorModal .modal-header::after {
+            content:''; position:absolute; bottom:-20px; left:30%;
+            width:120px; height:120px; border-radius:50%;
+            background:rgba(255,255,255,.03); pointer-events:none;
+        }
+        .header-top { display:flex; align-items:flex-start; justify-content:space-between; margin-bottom:0; }
+        .visitor-label { font-size:10px; font-weight:500; letter-spacing:.12em; text-transform:uppercase; color:rgba(255,255,255,.45); margin-bottom:6px; }
+        .visitor-name-information { font-size:1.4rem; font-weight:800; color:#fff; letter-spacing:-.02em; margin:0 0 6px; font-family:'Work Sans',sans-serif; }
+        .visitor-meta { display:flex; gap:14px; margin-top:6px; }
+        .meta-item { display:flex; align-items:center; gap:5px; font-size:12.5px; color:rgba(255,255,255,.55); }
+        .meta-item i { font-size:10px; opacity:.7; }
+        .header-right { display:flex; flex-direction:column; align-items:flex-end; gap:10px; position:relative; z-index:1; }
+        .close-btn { width:32px; height:32px; border-radius:8px; background:rgba(255,255,255,.1); border:none; cursor:pointer; display:flex; align-items:center; justify-content:center; color:rgba(255,255,255,.7); transition:background .15s; }
+        .close-btn:hover { background:rgba(255,255,255,.18); }
+        .pass-badge { background:rgba(255,255,255,.12); border:1px solid rgba(255,255,255,.15); border-radius:8px; padding:5px 10px; font-size:11px; color:rgba(255,255,255,.75); display:flex; align-items:center; gap:5px; font-family:'Space Mono',monospace; }
+        .pass-num { background:#3b82f6; color:#fff; font-size:11px; font-weight:600; border-radius:4px; padding:1px 6px; font-family:'Space Mono',monospace; }
 
-        /* ── HERO HEADER ── */
-        .modal-header {
-            padding: 0 !important;
-            border-bottom: none !important;
-            background: linear-gradient(135deg, #071a10 0%, #163d27 45%, #256642 100%) !important;
-            flex-direction: column !important;
-            align-items: stretch !important;
-            position: relative;
-            overflow: hidden;
-        }
+        /* â”€â”€ STATUS BAR â”€â”€ */
+        .status-bar { background:#f0fdf4; border-bottom:1px solid #dcfce7; padding:10px 28px; display:flex; align-items:center; justify-content:space-between; }
+        .status-pill { display:flex; align-items:center; gap:7px; font-size:12.5px; font-weight:500; color:#16a34a; }
+        .status-pill.overdue { color:#dc2626; }
+        .status-pill.registered { color:#2563eb; }
+        .status-dot { width:7px; height:7px; border-radius:50%; background:#22c55e; box-shadow:0 0 0 3px rgba(34,197,94,.2); animation:sdot 2s infinite; }
+        .status-pill.overdue .status-dot { background:#ef4444; box-shadow:0 0 0 3px rgba(239,68,68,.2); animation-duration:1.2s; }
+        .status-pill.registered .status-dot { background:#3b82f6; box-shadow:0 0 0 3px rgba(59,130,246,.2); }
+        @keyframes sdot { 0%,100%{box-shadow:0 0 0 3px rgba(34,197,94,.2)} 50%{box-shadow:0 0 0 5px rgba(34,197,94,.08)} }
+        .visit-pass-label { font-size:12px; color:#6b7280; font-family:'Space Mono',monospace; }
+        .visit-pass-label span { color:#1a2744; font-weight:600; }
 
-        /* animated mesh blobs */
-        .modal-header::before {
-            content: '';
-            position: absolute; top: -80px; right: -80px;
-            width: 300px; height: 300px; border-radius: 50%;
-            background: radial-gradient(circle, rgba(52,196,125,.16) 0%, transparent 70%);
-            animation: blobFloat 8s ease-in-out infinite;
-            pointer-events: none;
+        /* â”€â”€ BODY â”€â”€ */
+        #visitorModal .modal-body {
+            overflow-y:auto !important; padding:24px 28px !important;
+            display:flex !important; flex-direction:column !important; gap:20px !important;
+            flex:1 !important; background:#fff !important;
         }
-        .modal-header::after {
-            content: '';
-            position: absolute; bottom: -100px; left: -60px;
-            width: 260px; height: 260px; border-radius: 50%;
-            background: radial-gradient(circle, rgba(58,153,98,.1) 0%, transparent 70%);
-            animation: blobFloat 11s ease-in-out infinite reverse;
-            pointer-events: none;
-        }
-        @keyframes blobFloat {
-            0%,100% { transform: translate(0,0) scale(1); }
-            33%      { transform: translate(15px,-10px) scale(1.05); }
-            66%      { transform: translate(-10px,8px) scale(.96); }
-        }
+        #visitorModal .modal-body::-webkit-scrollbar { width:4px; }
+        #visitorModal .modal-body::-webkit-scrollbar-track { background:transparent; }
+        #visitorModal .modal-body::-webkit-scrollbar-thumb { background:#e5e7eb; border-radius:4px; }
+        .section-label { font-size:10px; font-weight:600; letter-spacing:.1em; text-transform:uppercase; color:#9ca3af; margin-bottom:10px; }
 
-        /* top bar */
-        .vm-topbar {
-            display: flex; align-items: center; justify-content: space-between;
-            padding: 20px 24px 12px; position: relative; z-index: 2;
-        }
-        .vm-topbar-left { display: flex; align-items: center; gap: 12px; }
-        .vm-topbar-badge {
-            display: inline-flex; align-items: center; gap: 7px;
-            background: rgba(255,255,255,.1); border: 1px solid rgba(255,255,255,.18);
-            border-radius: 8px; padding: 7px 14px;
-            font-size: .72rem; font-weight: 700; letter-spacing: .08em;
-            text-transform: uppercase; color: rgba(255,255,255,.8);
-        }
-        .vm-topbar-badge i { color: #86dba4; font-size: .65rem; }
-        .vm-topbar-title {
-            font-family: 'Syne', sans-serif; font-size: 1.05rem; font-weight: 800;
-            color: #fff; letter-spacing: -.01em;
-        }
-        .vm-close-btn {
-            width: 32px; height: 32px;
-            background: rgba(255,255,255,.08); border: 1px solid rgba(255,255,255,.15);
-            border-radius: 8px; color: rgba(255,255,255,.7); cursor: pointer;
-            display: flex; align-items: center; justify-content: center; font-size: 13px;
-            transition: all .2s; flex-shrink: 0; z-index: 2;
-        }
-        .vm-close-btn:hover { background: rgba(255,255,255,.2); color: #fff; transform: rotate(90deg); }
+        /* info grid */
+        .info-grid { display:grid; grid-template-columns:1fr 1fr; gap:8px; }
+        .info-card { background:#f9fafb; border:1px solid #f3f4f6; border-radius:12px; padding:12px 14px; display:flex; align-items:flex-start; gap:10px; transition:border-color .15s; }
+        .info-card:hover { border-color:#e5e7eb; }
+        .info-icon { width:30px; height:30px; border-radius:8px; display:flex; align-items:center; justify-content:center; flex-shrink:0; font-size:13px; }
+        .icon-blue   { background:#eff6ff; color:#3b82f6; }
+        .icon-green  { background:#f0fdf4; color:#22c55e; }
+        .icon-amber  { background:#fffbeb; color:#f59e0b; }
+        .icon-red    { background:#fef2f2; color:#ef4444; }
+        .icon-slate  { background:#f8fafc; color:#64748b; }
+        .info-text { min-width:0; }
+        .info-label { font-size:10.5px; color:#9ca3af; font-weight:500; margin-bottom:2px; }
+        .info-value { font-size:13px; color:#111827; font-weight:500; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
 
-        /* profile strip */
-        .vm-profile-strip {
-            margin: 0 24px 0;
-            background: rgba(255,255,255,.07);
-            border: 1px solid rgba(255,255,255,.12);
-            border-bottom: none; border-radius: 14px 14px 0 0;
-            padding: 18px 22px;
-            display: flex; align-items: center; gap: 16px;
-            position: relative; z-index: 2;
-        }
-        .vm-avatar {
-            width: 58px; height: 58px; border-radius: 16px; flex-shrink: 0;
-            background: linear-gradient(135deg, #3a9962, #52c47d);
-            display: flex; align-items: center; justify-content: center;
-            font-family: 'Syne', sans-serif; font-size: 1.3rem; font-weight: 800; color: #fff;
-            border: 2px solid rgba(255,255,255,.25);
-            box-shadow: 0 6px 20px rgba(0,0,0,.3), inset 0 1px 0 rgba(255,255,255,.2);
-            letter-spacing: -.02em;
-        }
-        .vm-profile-info { flex: 1; min-width: 0; }
-        .vm-profile-name {
-            font-family: 'Syne', sans-serif; font-size: 1.1rem; font-weight: 800;
-            color: #fff; letter-spacing: -.01em; margin-bottom: 4px;
-        }
-        .vm-profile-meta { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; }
-        .vm-profile-chip {
-            display: inline-flex; align-items: center; gap: 5px;
-            font-size: .73rem; color: rgba(255,255,255,.6); font-weight: 500;
-        }
-        .vm-profile-chip i { font-size: .65rem; opacity: .8; }
-        .vm-pass-pill {
-            margin-left: auto; flex-shrink: 0;
-            background: rgba(255,255,255,.12); border: 1.5px solid rgba(255,255,255,.22);
-            border-radius: 20px; padding: 6px 16px;
-            font-family: 'DM Mono', monospace; font-size: .78rem; font-weight: 500;
-            color: #86dba4; letter-spacing: .06em; white-space: nowrap;
-        }
+        /* id card */
+        .id-wrapper { display:flex; gap:14px; align-items:center; flex:1; }
+        .id-thumb { width:72px; height:48px; border-radius:8px; overflow:hidden; border:1px solid #e5e7eb; flex-shrink:0; background:#f3f4f6; display:flex; align-items:center; justify-content:center; }
+        .id-thumb img { width:100%; height:100%; object-fit:cover; }
+        .id-view-btn { background:#eff6ff; border:none; color:#3b82f6; font-size:11.5px; font-family:'DM Sans',sans-serif; font-weight:500; padding:5px 10px; border-radius:7px; cursor:pointer; white-space:nowrap; transition:background .15s; }
+        .id-view-btn:hover { background:#dbeafe; }
+        .divider { height:1px; background:#f3f4f6; }
 
-        /* status strip */
-        .vm-status-strip {
-            margin: 0 24px; padding: 10px 22px;
-            background: rgba(255,255,255,.05);
-            border: 1px solid rgba(255,255,255,.1); border-top: none;
-            border-radius: 0 0 10px 10px;
-            display: flex; align-items: center; gap: 16px;
-            position: relative; z-index: 2; margin-bottom: 0;
-        }
-        .vm-status-label {
-            font-size: .65rem; font-weight: 700; letter-spacing: .1em;
-            text-transform: uppercase; color: rgba(255,255,255,.4);
-        }
-        .vm-status-pill {
-            display: inline-flex; align-items: center; gap: 6px;
-            padding: 4px 12px; border-radius: 20px; font-size: .75rem; font-weight: 700;
-        }
-        .vm-status-pill.spl-active  { background: rgba(52,196,125,.2); color: #86dba4; border: 1px solid rgba(52,196,125,.3); }
-        .vm-status-pill.spl-overdue { background: rgba(239,68,68,.2); color: #fca5a5; border: 1px solid rgba(239,68,68,.3); }
-        .vm-status-pill.spl-registered { background: rgba(59,130,246,.2); color: #93c5fd; border: 1px solid rgba(59,130,246,.3); }
-        .vm-status-pulse { width: 7px; height: 7px; border-radius: 50%; }
-        .spl-active  .vm-status-pulse { background: #4ade80; animation: spulse 2s infinite; }
-        .spl-overdue .vm-status-pulse { background: #ef4444; animation: spulse 1.2s infinite; }
-        .spl-registered .vm-status-pulse { background: #60a5fa; animation: spulse 2s infinite; }
-        @keyframes spulse {
-            0%,100% { opacity:1; } 50% { opacity:.5; }
-        }
-        .vm-pass-display {
-            margin-left: auto; font-family: 'DM Mono', monospace;
-            font-size: .78rem; color: rgba(255,255,255,.4); font-weight: 500;
-        }
-        .vm-pass-display span { color: rgba(255,255,255,.75); font-weight: 600; margin-left: 5px; }
+        /* visit info */
+        .visit-card { background:linear-gradient(135deg,#f0f7ff 0%,#f5f3ff 100%); border:1px solid #e0e7ff; border-radius:14px; padding:18px; }
+        .visit-row { display:grid; grid-template-columns:1fr 1fr; gap:14px; margin-bottom:14px; }
+        .visit-field label { font-size:10.5px; color:#6b7280; font-weight:500; display:block; margin-bottom:4px; text-transform:uppercase; letter-spacing:.07em; }
+        .visit-field p { font-size:14px; font-weight:600; color:#1a2744; margin:0; }
+        .purpose-tag { display:inline-flex; align-items:center; background:#dbeafe; color:#1d4ed8; font-size:12px; font-weight:500; border-radius:20px; padding:3px 11px; }
+        .group-tag { display:inline-flex; align-items:center; gap:5px; background:#f3f4f6; color:#374151; font-size:12px; font-weight:500; border-radius:20px; padding:3px 11px; }
 
-        /* ── MODAL BODY ── */
-        .modal-body {
-            padding: 22px 24px !important;
-            background: var(--gray-50) !important;
-            display: grid !important;
-            grid-template-columns: 1fr 1.55fr !important;
-            gap: 18px !important;
-        }
+        /* time tracking */
+        .time-grid { display:grid; grid-template-columns:1fr 1fr 1fr; gap:10px; margin-bottom:12px; }
+        .time-tile { border-radius:12px; padding:14px 12px; text-align:center; border:1px solid transparent; }
+        .tile-checkin  { background:#f0fdf4; border-color:#dcfce7; }
+        .tile-checkout { background:#fff7ed; border-color:#fed7aa; }
+        .tile-duration { background:#eff6ff; border-color:#dbeafe; }
+        .tile-icon { width:32px; height:32px; border-radius:50%; margin:0 auto 8px; display:flex; align-items:center; justify-content:center; font-size:13px; color:#fff; }
+        .tile-checkin  .tile-icon { background:#22c55e; }
+        .tile-checkout .tile-icon { background:#f97316; }
+        .tile-duration .tile-icon { background:#3b82f6; }
+        .tile-label { font-size:9.5px; font-weight:600; letter-spacing:.1em; text-transform:uppercase; margin-bottom:5px; }
+        .tile-checkin  .tile-label { color:#16a34a; }
+        .tile-checkout .tile-label { color:#ea580c; }
+        .tile-duration .tile-label { color:#2563eb; }
+        .tile-value { font-size:13px; font-weight:600; color:#111827; font-family:'Space Mono',monospace; line-height:1.3; }
+        .tile-sub { font-size:10px; color:#9ca3af; margin-top:1px; font-family:'Space Mono',monospace; }
+        .total-time-bar { background:#1a2744; border-radius:10px; padding:12px 16px; display:flex; align-items:center; justify-content:space-between; }
+        .total-label { font-size:11px; color:rgba(255,255,255,.5); text-transform:uppercase; letter-spacing:.08em; }
+        .total-value { font-size:18px; font-weight:600; color:#fff; font-family:'Space Mono',monospace; }
 
-        /* personal info fields */
-        .vm-fields-col { display: flex; flex-direction: column; gap: 8px; }
-        .vm-section-label {
-            font-size: .63rem; font-weight: 700; letter-spacing: .1em;
-            text-transform: uppercase; color: var(--gray-400);
-            padding-bottom: 6px; margin-bottom: 2px;
-            border-bottom: 1px solid var(--border-lt);
-        }
-        .vm-field {
-            background: #fff; border: 1px solid var(--border);
-            border-radius: 10px; padding: 11px 14px;
-            display: flex; align-items: flex-start; gap: 11px;
-            transition: border-color .2s, box-shadow .2s, transform .15s;
-        }
-        .vm-field:hover {
-            border-color: var(--green-300);
-            box-shadow: 0 2px 10px rgba(58,153,98,.1);
-            transform: translateX(2px);
-        }
-        .vm-field-ico {
-            width: 32px; height: 32px; border-radius: 9px; flex-shrink: 0;
-            display: flex; align-items: center; justify-content: center; font-size: 12px;
-        }
-        .ico-g { background: var(--green-100);        color: var(--green-600); }
-        .ico-b { background: var(--accent-blue-lt);   color: var(--accent-blue); }
-        .ico-t { background: var(--accent-teal-lt);   color: var(--accent-teal); }
-        .ico-o { background: var(--accent-orange-lt); color: var(--accent-orange); }
-        .ico-r { background: var(--accent-red-lt);    color: var(--accent-red); }
-        .ico-x { background: var(--gray-100);         color: var(--gray-600); }
+        /* notes */
+        .notes-box { background:#fafafa; border:1px dashed #e5e7eb; border-radius:12px; padding:14px 16px; font-size:13px; color:#9ca3af; font-style:italic; min-height:56px; display:flex; align-items:center; }
 
-        .vm-field-lbl {
-            font-size: .62rem; font-weight: 700; letter-spacing: .07em;
-            text-transform: uppercase; color: var(--gray-400); margin-bottom: 3px;
-        }
-        .vm-field-val { font-size: .88rem; font-weight: 600; color: var(--gray-800); line-height: 1.4; }
-        .vm-field-val.vm-muted { color: var(--gray-400); font-style: italic; font-weight: 400; }
+        /* â”€â”€ FOOTER â”€â”€ */
+        #visitorModal .modal-footer { padding:16px 28px !important; border-top:1px solid #f3f4f6 !important; display:flex !important; align-items:center !important; justify-content:space-between !important; background:#fff !important; border-radius:0 0 20px 20px !important; }
+        .realtime-tag { display:flex; align-items:center; gap:6px; font-size:11.5px; color:#9ca3af; }
+        .rt-dot { width:6px; height:6px; border-radius:50%; background:#22c55e; animation:rtp 2s infinite; }
+        @keyframes rtp { 0%,100%{opacity:1} 50%{opacity:.4} }
+        .footer-actions { display:flex; gap:8px; }
+        .btn-vm { padding:9px 18px; border-radius:10px; font-size:13px; font-weight:500; font-family:'DM Sans',sans-serif; cursor:pointer; transition:all .15s; border:none; display:flex; align-items:center; gap:6px; }
+        .btn-ghost { background:#f3f4f6; color:#374151; }
+        .btn-ghost:hover { background:#e5e7eb; }
+        .btn-checkout-main { background:linear-gradient(135deg,#ef4444,#dc2626); color:#fff; box-shadow:0 3px 10px rgba(239,68,68,.3); }
+        .btn-checkout-main:hover { transform:translateY(-1px); box-shadow:0 6px 16px rgba(239,68,68,.4); }
+        #modalIdPhotoWrap img { width:100%; max-height:160px; object-fit:contain; border-radius:8px; border:1px solid #e5e7eb; background:#f9fafb; cursor:zoom-in; transition:transform .2s; }
+        #modalIdPhotoWrap img:hover { transform:scale(1.02); }
 
-        /* right: visit info */
-        .vm-info-col { display: flex; flex-direction: column; gap: 14px; }
-
-        /* section cards */
-        .vm-card {
-            background: #fff; border: 1px solid var(--border);
-            border-radius: 12px; overflow: hidden;
-            box-shadow: 0 1px 4px rgba(0,0,0,.05);
-            transition: box-shadow .2s;
+        @media (max-width:768px) {
+            .info-grid { grid-template-columns:1fr; }
+            .visit-row { grid-template-columns:1fr; gap:10px; }
+            .time-grid { grid-template-columns:1fr 1fr; }
         }
-        .vm-card:hover { box-shadow: 0 4px 16px rgba(0,0,0,.09); }
-        .vm-card-head {
-            padding: 13px 18px; display: flex; align-items: center; gap: 11px;
-            position: relative; overflow: hidden;
-        }
-        .vm-card-head::after {
-            content: ''; position: absolute; right: -14px; top: -14px;
-            width: 70px; height: 70px; border-radius: 50%;
-            background: rgba(255,255,255,.1); pointer-events: none;
-        }
-        .vm-card-head.ch-blue   { background: linear-gradient(135deg, #2563eb, #3b82f6); }
-        .vm-card-head.ch-teal   { background: linear-gradient(135deg, #0f766e, #0d9488); }
-        .vm-card-head.ch-orange { background: linear-gradient(135deg, #d97706, #f59e0b); }
-        .vm-card-head.ch-green  { background: linear-gradient(135deg, #1e5235, #2d7a4f); }
-        .vm-card-head-ico {
-            width: 34px; height: 34px; border-radius: 9px;
-            background: rgba(255,255,255,.2); display: flex; align-items: center;
-            justify-content: center; font-size: 14px; color: #fff; flex-shrink: 0;
-        }
-        .vm-card-head h6 {
-            font-family: 'Syne', sans-serif; font-size: .9rem; font-weight: 700;
-            color: #fff; margin: 0 0 2px;
-        }
-        .vm-card-head p { font-size: .72rem; color: rgba(255,255,255,.7); margin: 0; }
-
-        .vm-card-body { padding: 16px 18px; }
-
-        /* inset boxes */
-        .vm-inset {
-            background: var(--gray-50); border: 1px solid var(--border-lt);
-            border-radius: 8px; padding: 11px 14px; transition: background .2s;
-        }
-        .vm-inset:hover { background: #f0f7f4; }
-        .vm-inset-lbl {
-            font-size: .62rem; font-weight: 700; letter-spacing: .08em;
-            text-transform: uppercase; color: var(--gray-400);
-            display: flex; align-items: center; gap: 5px; margin-bottom: 5px;
-        }
-        .vm-inset-val { font-size: .88rem; font-weight: 600; color: var(--gray-800); line-height: 1.5; }
-        .vm-inset-val.vm-muted { color: var(--gray-400); font-style: italic; font-weight: 400; }
-
-        .vm-grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
-
-        /* Time trio */
-        .vm-time-trio { display: grid; grid-template-columns: repeat(3,1fr); gap: 10px; }
-        .vm-time-tile {
-            border-radius: 11px; border: 1.5px solid;
-            padding: 16px 10px 14px; text-align: center;
-            transition: transform .2s, box-shadow .2s;
-        }
-        .vm-time-tile:hover { transform: translateY(-3px); box-shadow: 0 6px 18px rgba(0,0,0,.1); }
-        .vm-time-tile.tt-green { background: linear-gradient(155deg, #edfaf4, #fff); border-color: var(--green-200); }
-        .vm-time-tile.tt-red   { background: linear-gradient(155deg, #fee2e2, #fff); border-color: #fecaca; }
-        .vm-time-tile.tt-blue  { background: linear-gradient(155deg, #dbeafe, #fff); border-color: #bfdbfe; }
-        .vm-time-circle {
-            width: 42px; height: 42px; border-radius: 50%; margin: 0 auto 10px;
-            display: flex; align-items: center; justify-content: center; font-size: 15px; color: #fff;
-        }
-        .tt-green .vm-time-circle { background: linear-gradient(135deg, var(--green-500), var(--green-400)); box-shadow: 0 4px 12px rgba(45,122,79,.3); }
-        .tt-red   .vm-time-circle { background: linear-gradient(135deg, #ef4444, #dc2626); box-shadow: 0 4px 12px rgba(239,68,68,.3); }
-        .tt-blue  .vm-time-circle { background: linear-gradient(135deg, #3b82f6, #2563eb); box-shadow: 0 4px 12px rgba(59,130,246,.3); }
-        .vm-time-lbl {
-            font-size: .62rem; font-weight: 700; letter-spacing: .08em;
-            text-transform: uppercase; margin-bottom: 5px;
-        }
-        .tt-green .vm-time-lbl { color: var(--green-600); }
-        .tt-red   .vm-time-lbl { color: #dc2626; }
-        .tt-blue  .vm-time-lbl { color: #2563eb; }
-        .vm-time-val {
-            font-family: 'DM Mono', monospace; font-size: .82rem; font-weight: 600;
-            color: var(--gray-900); line-height: 1.4;
-        }
-
-        /* Duration hero bar */
-        .vm-duration-hero {
-            background: linear-gradient(135deg, var(--green-700), var(--green-500));
-            border-radius: 10px; padding: 12px 18px;
-            display: flex; align-items: center; justify-content: space-between;
-            margin-top: 12px;
-        }
-        .vm-duration-label {
-            font-size: .68rem; font-weight: 700; letter-spacing: .08em;
-            text-transform: uppercase; color: rgba(255,255,255,.6); margin-bottom: 3px;
-        }
-        .vm-duration-value {
-            font-family: 'Syne', sans-serif; font-size: 1.45rem; font-weight: 800;
-            color: #fff; letter-spacing: -.02em;
-        }
-        .vm-duration-ico {
-            width: 44px; height: 44px; border-radius: 12px;
-            background: rgba(255,255,255,.15); display: flex; align-items: center;
-            justify-content: center; font-size: 18px; color: rgba(255,255,255,.9);
-        }
-
-        /* ── MODAL FOOTER ── */
-        .modal-footer {
-            border-top: 1px solid var(--border) !important;
-            background: #fff !important;
-            padding: 14px 24px !important;
-            border-radius: 0 0 20px 20px !important;
-        }
-        .vm-footer-inner {
-            display: flex; align-items: center; justify-content: space-between;
-            width: 100%; gap: 12px; flex-wrap: wrap;
-        }
-        .vm-footer-pulse {
-            display: flex; align-items: center; gap: 7px;
-            font-size: .75rem; color: var(--gray-400); font-weight: 500;
-        }
-        .vm-realtime-dot {
-            width: 7px; height: 7px; border-radius: 50%; background: #22c55e;
-            animation: rtp 2s ease-in-out infinite;
-        }
-        @keyframes rtp { 0%,100% { opacity:1; transform:scale(1); } 50% { opacity:.4; transform:scale(.65); } }
-        .vm-footer-btns { display: flex; gap: 8px; }
-        .btn-vm-close {
-            display: inline-flex; align-items: center; gap: 7px;
-            padding: 9px 20px; border-radius: 9px;
-            background: var(--gray-100); border: 1px solid var(--border);
-            font-family: 'DM Sans', sans-serif; font-weight: 600; font-size: .85rem;
-            color: var(--gray-600); cursor: pointer; transition: all .2s;
-        }
-        .btn-vm-close:hover { background: var(--gray-200); color: var(--gray-900); }
-        .btn-vm-checkout {
-            display: inline-flex; align-items: center; gap: 7px;
-            padding: 9px 22px; border-radius: 9px;
-            background: linear-gradient(135deg, #ef4444, #dc2626);
-            border: none; font-family: 'DM Sans', sans-serif;
-            font-weight: 700; font-size: .85rem; color: #fff;
-            cursor: pointer; transition: all .2s; letter-spacing: .01em;
-            box-shadow: 0 3px 10px rgba(239,68,68,.35);
-        }
-        .btn-vm-checkout:hover { transform: translateY(-1px); box-shadow: 0 6px 18px rgba(239,68,68,.45); }
 
         /* ─── CHECKOUT CONFIRM MODAL ─── */
         #checkoutModal {
@@ -1229,7 +1016,7 @@ $csrf_token = generateCSRFToken();
             flex-shrink:0;
         }
         .co-icon i { font-size:1.3rem; color:#fff; }
-        .co-header-text h5 { margin:0; color:#fff; font-family:'Syne',sans-serif; font-size:1.1rem; font-weight:800; }
+        .co-header-text h5 { margin:0; color:#fff; font-family:'Work Sans',sans-serif; font-size:1.1rem; font-weight:800; }
         .co-header-text p  { margin:4px 0 0; color:rgba(255,255,255,.8); font-size:.8rem; }
         .co-body { padding:24px 28px; }
         .co-visitor-card {
@@ -1453,237 +1240,187 @@ $csrf_token = generateCSRFToken();
         <i class="fas fa-sync-alt me-1"></i> Updated
     </div>
 
-    <!-- ═══════════════════════════════════════════
-         ENHANCED VISITOR DETAILS MODAL
-         All data-binding IDs are identical to original.
-         Only the surrounding visual HTML is redesigned.
-    ═══════════════════════════════════════════ -->
+    <!-- â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
+         VISITOR DETAILS MODAL
+    â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â• -->
     <div class="modal fade" id="visitorModal" tabindex="-1" aria-labelledby="visitorModalLabel" aria-hidden="true">
-        <div class="modal-dialog modal-xl">
+        <div class="modal-dialog modal-lg">
             <div class="modal-content">
 
-                <!-- ══ HERO HEADER ══ -->
+                <!-- HEADER -->
                 <div class="modal-header">
-
-                    <!-- top bar -->
-                    <div class="vm-topbar">
-                        <div class="vm-topbar-left">
-                            <div class="vm-topbar-badge">
-                                <i class="fas fa-circle" style="font-size:.45rem;"></i>
-                                Visitor Record
+                    <div class="header-top">
+                        <div>
+                            <p class="visitor-label">Visitor Record</p>
+                            <h2 class="visitor-name-information" id="vmProfileName">&mdash;</h2>
+                            <div class="visitor-meta" id="vmProfileSub"></div>
+                        </div>
+                        <div class="header-right">
+                            <button type="button" class="close-btn" onclick="hideModal()" aria-label="Close">
+                                <i class="fas fa-times"></i>
+                            </button>
+                            <div class="pass-badge">
+                                Visit Pass <span class="pass-num" id="vmPassPill">&mdash;</span>
                             </div>
-                            <div class="vm-topbar-title" id="visitorModalLabel">Visitor Information</div>
-                        </div>
-                        <button type="button" class="vm-close-btn" data-bs-dismiss="modal" aria-label="Close">
-                            <i class="fas fa-times"></i>
-                        </button>
-                    </div>
-
-                    <!-- profile strip -->
-                    <div class="vm-profile-strip">
-                        <div class="vm-profile-info">
-                            <div class="vm-profile-name" id="vmProfileName">—</div>
-                            <div class="vm-profile-meta" id="vmProfileSub">—</div>
-                        </div>
-                        <div class="vm-pass-pill" id="vmPassPill">—</div>
-                    </div>
-
-                    <!-- status strip -->
-                    <div class="vm-status-strip">
-                        <div class="vm-status-label">Status</div>
-                        <div id="modalStatus">—</div>
-                        <div class="vm-pass-display">
-                            Visit Pass <span id="modalVisitorPass">—</span>
                         </div>
                     </div>
+                </div>
 
-                </div><!-- /modal-header -->
+                <!-- STATUS BAR -->
+                <div class="status-bar">
+                    <div id="modalStatus">&mdash;</div>
+                    <span class="visit-pass-label">Pass #<span id="modalVisitorPass">&mdash;</span></span>
+                </div>
 
-                <!-- ══ BODY ══ -->
+                <!-- BODY -->
                 <div class="modal-body">
 
-                    <!-- LEFT: personal info fields -->
-                    <div class="vm-fields-col">
-                        <div class="vm-section-label">Personal Information</div>
-
-                        <div class="vm-field">
-                            <div class="vm-field-ico ico-g"><i class="fas fa-user"></i></div>
-                            <div>
-                                <div class="vm-field-lbl">Full Name</div>
-                                <div class="vm-field-val" id="modalVisitorName">—</div>
-                            </div>
-                        </div>
-
-                        <div class="vm-field">
-                            <div class="vm-field-ico ico-b"><i class="fas fa-phone"></i></div>
-                            <div>
-                                <div class="vm-field-lbl">Phone Number</div>
-                                <div class="vm-field-val" id="modalPhone">—</div>
-                            </div>
-                        </div>
-
-                        <div class="vm-field">
-                            <div class="vm-field-ico ico-t"><i class="fas fa-envelope"></i></div>
-                            <div>
-                                <div class="vm-field-lbl">Email Address</div>
-                                <div class="vm-field-val" id="modalEmail">—</div>
-                            </div>
-                        </div>
-
-                        <div class="vm-field">
-                            <div class="vm-field-ico ico-r"><i class="fas fa-map-marker-alt"></i></div>
-                            <div>
-                                <div class="vm-field-lbl">Address</div>
-                                <div class="vm-field-val" id="modalAddress">—</div>
-                            </div>
-                        </div>
-
-                        <div class="vm-field">
-                            <div class="vm-field-ico ico-x"><i class="fas fa-id-card"></i></div>
-                            <div>
-                                <div class="vm-field-lbl">ID Type</div>
-                                <div class="vm-field-val" id="modalIdType">—</div>
-                            </div>
-                        </div>
-
-                        <!-- ID Photo -->
-                        <div id="modalIdPhotoWrap" style="display:none;margin-top:10px;">
-                            <div class="vm-field-lbl" style="margin-bottom:6px;"><i class="fas fa-image me-1" style="color:var(--accent-blue);"></i>Uploaded Valid ID</div>
-                            <a id="modalIdPhotoLink" href="#" target="_blank">
-                                <img id="modalIdPhoto" src="" alt="Valid ID"
-                                    style="width:100%;max-height:180px;object-fit:contain;border-radius:8px;border:1px solid var(--border);background:var(--gray-50);cursor:zoom-in;">
-                            </a>
-                            <div style="font-size:.72rem;color:var(--gray-400);margin-top:4px;"><i class="fas fa-external-link-alt me-1"></i>Click to open full size</div>
-                        </div>
-                    </div><!-- /left col -->
-
-                    <!-- RIGHT: visit info -->
-                    <div class="vm-info-col">
-
-                        <!-- Visit Information -->
-                        <div class="vm-card">
-                            <div class="vm-card-head ch-blue">
-                                <div class="vm-card-head-ico"><i class="fas fa-clipboard-list"></i></div>
-                                <div>
-                                    <h6>Visit Information</h6>
-                                    <p>Purpose and visit details</p>
+                    <!-- Personal Info -->
+                    <div>
+                        <p class="section-label">Personal Information</p>
+                        <div class="info-grid">
+                            <div class="info-card">
+                                <div class="info-icon icon-blue"><i class="fas fa-user"></i></div>
+                                <div class="info-text">
+                                    <p class="info-label">Full Name</p>
+                                    <p class="info-value" id="modalVisitorName">&mdash;</p>
                                 </div>
                             </div>
-                            <div class="vm-card-body">
-                                <div class="vm-grid-2" style="margin-bottom:10px;">
-                                    <div class="vm-inset">
-                                        <div class="vm-inset-lbl">
-                                            <i class="fas fa-sitemap" style="color:var(--green-500)"></i> Department
-                                        </div>
-                                        <div class="vm-inset-val" id="modalDepartment">—</div>
-                                    </div>
-                                    <div class="vm-inset">
-                                        <div class="vm-inset-lbl">
-                                            <i class="fas fa-user-tie" style="color:var(--accent-blue)"></i> Person to Visit
-                                        </div>
-                                        <div class="vm-inset-val" id="modalPersonToVisit">—</div>
-                                    </div>
-                                </div>
-                                <div class="vm-inset" style="margin-bottom:10px;">
-                                    <div class="vm-inset-lbl">
-                                        <i class="fas fa-bullseye" style="color:var(--accent-teal)"></i> Visit Purpose
-                                    </div>
-                                    <div class="vm-inset-val" id="modalPurpose">—</div>
-                                </div>
-                                <div class="vm-inset" style="background:var(--green-50);border-color:var(--green-100);">
-                                    <div class="vm-inset-lbl">
-                                        <i class="fas fa-users" style="color:var(--green-600)"></i> Group Visit Status
-                                    </div>
-                                    <div class="vm-inset-val" id="modalGroupStatus">—</div>
+                            <div class="info-card">
+                                <div class="info-icon icon-green"><i class="fas fa-phone"></i></div>
+                                <div class="info-text">
+                                    <p class="info-label">Phone Number</p>
+                                    <p class="info-value" id="modalPhone">&mdash;</p>
                                 </div>
                             </div>
-                        </div>
-
-                        <!-- Group Members — hidden by JS -->
-                        <div class="vm-card" id="groupMembersRow" style="display:none;">
-                            <div class="vm-card-head ch-green">
-                                <div class="vm-card-head-ico"><i class="fas fa-users"></i></div>
-                                <h6>Group Members</h6>
-                            </div>
-                            <div class="vm-card-body">
-                                <div class="vm-inset">
-                                    <p style="font-size:.87rem;color:var(--gray-700);line-height:1.7;margin:0;"
-                                       id="modalGroupMembers">—</p>
+                            <div class="info-card" style="grid-column:1/-1;">
+                                <div class="info-icon icon-amber"><i class="fas fa-envelope"></i></div>
+                                <div class="info-text">
+                                    <p class="info-label">Email Address</p>
+                                    <p class="info-value" id="modalEmail">&mdash;</p>
                                 </div>
                             </div>
-                        </div>
-
-                        <!-- Time Tracking -->
-                        <div class="vm-card">
-                            <div class="vm-card-head ch-teal">
-                                <div class="vm-card-head-ico"><i class="fas fa-clock"></i></div>
-                                <div>
-                                    <h6>Time Tracking Dashboard</h6>
-                                    <p>Check-in, check-out &amp; duration</p>
+                            <div class="info-card" style="grid-column:1/-1;">
+                                <div class="info-icon icon-red"><i class="fas fa-map-marker-alt"></i></div>
+                                <div class="info-text">
+                                    <p class="info-label">Address</p>
+                                    <p class="info-value" style="white-space:normal;overflow:visible;text-overflow:unset;" id="modalAddress">&mdash;</p>
                                 </div>
                             </div>
-                            <div class="vm-card-body">
-                                <div class="vm-time-trio">
-                                    <div class="vm-time-tile tt-green">
-                                        <div class="vm-time-circle"><i class="fas fa-sign-in-alt"></i></div>
-                                        <div class="vm-time-lbl">Check-in</div>
-                                        <div class="vm-time-val" id="modalCheckInTime">—</div>
-                                    </div>
-                                    <div class="vm-time-tile tt-red">
-                                        <div class="vm-time-circle"><i class="fas fa-sign-out-alt"></i></div>
-                                        <div class="vm-time-lbl">Check-out</div>
-                                        <div class="vm-time-val" id="modalCheckOutTime">—</div>
-                                    </div>
-                                    <div class="vm-time-tile tt-blue">
-                                        <div class="vm-time-circle"><i class="fas fa-hourglass-half"></i></div>
-                                        <div class="vm-time-lbl">Duration</div>
-                                        <div class="vm-time-val" id="modalDuration">—</div>
-                                    </div>
-                                </div>
-                                <div class="vm-duration-hero" id="vmDurationHero" style="display:none;">
-                                    <div>
-                                        <div class="vm-duration-label">Total Time on Campus</div>
-                                        <div class="vm-duration-value" id="vmDurationText">—</div>
-                                    </div>
-                                    <div class="vm-duration-ico"><i class="fas fa-hourglass-end"></i></div>
-                                </div>
-                            </div>
-                        </div>
-
-                        <!-- Additional Notes -->
-                        <div class="vm-card">
-                            <div class="vm-card-head ch-orange">
-                                <div class="vm-card-head-ico"><i class="fas fa-sticky-note"></i></div>
-                                <h6>Additional Notes</h6>
-                            </div>
-                            <div class="vm-card-body">
-                                <div class="vm-inset" style="min-height:46px;">
-                                    <p style="font-size:.87rem;color:var(--gray-400);font-style:italic;line-height:1.7;margin:0;"
-                                       id="modalNotes">No additional notes provided</p>
-                                </div>
-                            </div>
-                        </div>
-
-                    </div><!-- /right col -->
-                </div><!-- /modal-body -->
-
-                <!-- ══ FOOTER ══ -->
-                <div class="modal-footer">
-                    <div class="vm-footer-inner">
-                        <div class="vm-footer-pulse">
-                            <div class="vm-realtime-dot"></div>
-                            Visitor information is updated in real-time
-                        </div>
-                        <div class="vm-footer-btns">
-                            <button type="button" class="btn-vm-close" data-bs-dismiss="modal">
-                                <i class="fas fa-times"></i> Close
-                            </button>
-                            <button type="button" class="btn-vm-checkout" id="modalCheckoutBtn">
-                                <i class="fas fa-sign-out-alt"></i> Check Out Visitor
-                            </button>
                         </div>
                     </div>
-                </div><!-- /modal-footer -->
+
+                    <!-- ID Section -->
+                    <div>
+                        <p class="section-label">Identification</p>
+                        <div class="info-card" style="border-radius:12px;">
+                            <div class="info-icon icon-slate"><i class="fas fa-id-card"></i></div>
+                            <div class="id-wrapper">
+                                <div style="flex:1;">
+                                    <p class="info-label">ID Type</p>
+                                    <p class="info-value" id="modalIdType">&mdash;</p>
+                                </div>
+                                <div class="id-thumb" id="modalIdPhotoWrap" style="display:none;">
+                                    <a id="modalIdPhotoLink" href="#" target="_blank">
+                                        <img id="modalIdPhoto" src="" alt="Valid ID">
+                                    </a>
+                                </div>
+                                <button class="id-view-btn" id="modalIdViewBtn" style="display:none;" onclick="document.getElementById('modalIdPhotoLink').click()">
+                                    View ID
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="divider"></div>
+
+                    <!-- Visit Info -->
+                    <div>
+                        <p class="section-label">Visit Information</p>
+                        <div class="visit-card">
+                            <div class="visit-row">
+                                <div class="visit-field">
+                                    <label>Department</label>
+                                    <p id="modalDepartment">&mdash;</p>
+                                </div>
+                                <div class="visit-field">
+                                    <label>Person to Visit</label>
+                                    <p id="modalPersonToVisit">&mdash;</p>
+                                </div>
+                            </div>
+                            <div class="visit-row" style="margin-bottom:0;">
+                                <div class="visit-field">
+                                    <label>Visit Purpose</label>
+                                    <div id="modalPurpose">&mdash;</div>
+                                </div>
+                                <div class="visit-field">
+                                    <label>Group Status</label>
+                                    <div id="modalGroupStatus">&mdash;</div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Group Members -->
+                    <div id="groupMembersRow" style="display:none;">
+                        <p class="section-label">Group Members</p>
+                        <div class="visit-card">
+                            <p style="font-size:13.5px;color:#374151;line-height:1.7;margin:0;" id="modalGroupMembers">&mdash;</p>
+                        </div>
+                    </div>
+
+                    <!-- Time Tracking -->
+                    <div>
+                        <p class="section-label">Time Tracking</p>
+                        <div class="time-grid">
+                            <div class="time-tile tile-checkin">
+                                <div class="tile-icon"><i class="fas fa-sign-in-alt"></i></div>
+                                <p class="tile-label">Check-In</p>
+                                <p class="tile-value" id="modalCheckInTime">&mdash;</p>
+                                <p class="tile-sub" id="modalCheckInSub">&mdash;</p>
+                            </div>
+                            <div class="time-tile tile-checkout">
+                                <div class="tile-icon"><i class="fas fa-sign-out-alt"></i></div>
+                                <p class="tile-label">Check-Out</p>
+                                <p class="tile-value" id="modalCheckOutTime">&mdash;</p>
+                                <p class="tile-sub" id="modalCheckOutSub">&mdash;</p>
+                            </div>
+                            <div class="time-tile tile-duration">
+                                <div class="tile-icon"><i class="fas fa-hourglass-half"></i></div>
+                                <p class="tile-label">Duration</p>
+                                <p class="tile-value" id="modalDuration">&mdash;</p>
+                                <p class="tile-sub">On campus</p>
+                            </div>
+                        </div>
+                        <div class="total-time-bar" id="vmDurationHero" style="display:none;">
+                            <span class="total-label">Total Time on Campus</span>
+                            <span class="total-value" id="vmDurationText">&mdash;</span>
+                        </div>
+                    </div>
+
+                    <!-- Notes -->
+                    <div>
+                        <p class="section-label">Additional Notes</p>
+                        <div class="notes-box" id="modalNotes">No additional notes provided.</div>
+                    </div>
+
+                </div><!-- /modal-body -->
+
+                <!-- FOOTER -->
+                <div class="modal-footer">
+                    <div class="realtime-tag">
+                        <span class="rt-dot"></span>
+                        Updated in real-time
+                    </div>
+                    <div class="footer-actions">
+                        <button type="button" class="btn-vm btn-ghost" onclick="hideModal()">
+                            <i class="fas fa-times"></i> Close
+                        </button>
+                        <button type="button" class="btn-vm btn-checkout-main" id="modalCheckoutBtn" style="display:none;">
+                            <i class="fas fa-sign-out-alt"></i> Check Out
+                        </button>
+                    </div>
+                </div>
 
             </div><!-- /modal-content -->
         </div><!-- /modal-dialog -->
@@ -1811,8 +1548,8 @@ $csrf_token = generateCSRFToken();
                     ? new Date(v.last_visit).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })
                     : 'Never';
 
-                const isCheckedIn      = v.is_currently_checked_in == 1;
-                const checkedOutToday  = v.checked_out_today == 1;
+                const isCheckedIn     = v.is_currently_checked_in == 1;
+                const checkedOutToday = v.checked_out_today == 1;
 
                 const actionButtons = isCheckedIn
                     ? `<div style="display:flex;flex-direction:column;gap:6px;">
@@ -1825,8 +1562,8 @@ $csrf_token = generateCSRFToken();
                        </div>`
                     : checkedOutToday
                     ? `<div style="display:flex;flex-direction:column;gap:6px;">
-                           <span class="badge-status" style="justify-content:center;background:rgba(239,68,68,.12);color:#ef4444;border:1px solid rgba(239,68,68,.2);">
-                               <i class="fas fa-ban"></i> Checked Out
+                           <span class="badge-status" style="justify-content:center;background:rgba(239,68,68,.10);color:#dc2626;border:1px solid rgba(239,68,68,.2);">
+                               <i class="fas fa-sign-out-alt"></i> Checked Out
                            </span>
                            <button class="btn-view-outline" onclick="viewRegisteredVisitorDetails(${v.id})">
                                <i class="fas fa-eye"></i> View
@@ -1878,12 +1615,14 @@ $csrf_token = generateCSRFToken();
                         refreshVisitors(true);
                     } else {
                         showAlert('danger', res.message);
-                        btn.prop('disabled', false).html('<i class="fas fa-sign-in-alt"></i> Check In');
+                        // Refresh so the button reflects the real server state
+                        // (e.g. visitor already checked out — replace Check In with Checked Out badge)
+                        refreshRegisteredVisitors();
                     }
                 },
                 error: function () {
                     showAlert('danger', 'Failed to check in visitor. Please try again.');
-                    btn.prop('disabled', false).html('<i class="fas fa-sign-in-alt"></i> Check In');
+                    refreshRegisteredVisitors();
                 }
             });
         }
@@ -2009,9 +1748,12 @@ $csrf_token = generateCSRFToken();
                     success: function (res) {
                         modal.classList.remove('show');
                         if (res.success) {
+                            // Immediately refresh registered visitors so the
+                            // "Check In" button is replaced before the user can click it
+                            refreshRegisteredVisitors();
+                            refreshVisitors(true);
                             $(`#visitor-${visitId}`).fadeOut(300, function () {
                                 $(this).remove();
-                                refreshVisitors(true);
                             });
                             showAlert('success', res.message);
                             hideModal();
@@ -2099,25 +1841,24 @@ $csrf_token = generateCSRFToken();
 
         function populateModalWithVisitorData(visitor, isRegisteredVisitor = false) {
             const fullName = `${visitor.first_name} ${visitor.last_name}`;
-            const initials = (visitor.first_name?.[0] || '') + (visitor.last_name?.[0] || '');
 
-            // ── profile strip ──
+            // ── header ──
             $('#vmProfileName').text(fullName);
 
-            // build meta chips
-            const chips = [];
-            if (visitor.phone) chips.push(`<span class="vm-profile-chip"><i class="fas fa-phone"></i> ${esc(visitor.phone)}</span>`);
-            if (visitor.address) chips.push(`<span class="vm-profile-chip"><i class="fas fa-map-marker-alt"></i> ${esc(visitor.address)}</span>`);
-            $('#vmProfileSub').html(chips.join('') || '<span class="vm-profile-chip">No contact info</span>');
+            // meta items (phone + address)
+            const metaParts = [];
+            if (visitor.phone)   metaParts.push(`<span class="meta-item"><i class="fas fa-phone"></i> ${esc(visitor.phone)}</span>`);
+            if (visitor.address) metaParts.push(`<span class="meta-item"><i class="fas fa-map-marker-alt"></i> ${esc(visitor.address)}</span>`);
+            $('#vmProfileSub').html(metaParts.join('') || '<span class="meta-item">No contact info</span>');
 
             $('#vmPassPill').text(visitor.visit_pass || '—');
 
             // ── personal fields ──
             $('#modalVisitorName').text(fullName);
-            $('#modalPhone').text(visitor.phone || 'Not provided').toggleClass('vm-muted', !visitor.phone);
-            $('#modalEmail').text(visitor.email || 'Not provided').toggleClass('vm-muted', !visitor.email);
-            $('#modalAddress').text(visitor.address || 'Not provided').toggleClass('vm-muted', !visitor.address);
-            $('#modalIdType').text(visitor.id_type || 'Not provided').toggleClass('vm-muted', !visitor.id_type);
+            $('#modalPhone').text(visitor.phone || 'Not provided');
+            $('#modalEmail').text(visitor.email || 'Not provided');
+            $('#modalAddress').text(visitor.address || 'Not provided');
+            $('#modalIdType').text(visitor.id_type || 'Not provided');
 
             // ID photo
             if (visitor.id_photo_path) {
@@ -2125,49 +1866,50 @@ $csrf_token = generateCSRFToken();
                 $('#modalIdPhoto').attr('src', photoSrc);
                 $('#modalIdPhotoLink').attr('href', photoSrc);
                 $('#modalIdPhotoWrap').show();
+                $('#modalIdViewBtn').show();
             } else {
                 $('#modalIdPhotoWrap').hide();
+                $('#modalIdViewBtn').hide();
             }
 
             // ── visit info ──
-            $('#modalDepartment').text(visitor.department || 'Not specified').toggleClass('vm-muted', !visitor.department);
-            $('#modalPersonToVisit').text(visitor.person_to_visit || 'Not specified').toggleClass('vm-muted', !visitor.person_to_visit);
-            $('#modalPurpose').text(visitor.purpose || 'Not specified').toggleClass('vm-muted', !visitor.purpose);
+            $('#modalDepartment').text(visitor.department || 'Not specified');
+            $('#modalPersonToVisit').text(visitor.person_to_visit || 'Not specified');
+            $('#modalPurpose').html(`<span class="purpose-tag">${esc(visitor.purpose || 'Not specified')}</span>`);
 
             // group
             if (visitor.is_group_visit == '1' || visitor.is_group_visit === true || visitor.is_group_visit === 1) {
-                $('#modalGroupStatus').html(`
-                    <span style="display:inline-flex;align-items:center;gap:6px;font-weight:600;color:var(--green-600);">
-                        <i class="fas fa-users"></i> Group Visit — ${visitor.group_size || '?'} people
-                    </span>`);
+                $('#modalGroupStatus').html(`<span class="group-tag"><i class="fas fa-users"></i> Group — ${visitor.group_size || '?'} people</span>`);
                 $('#modalGroupMembers').text(visitor.group_members || 'Members not specified');
                 $('#groupMembersRow').show();
             } else {
-                $('#modalGroupStatus').html(`
-                    <span style="display:inline-flex;align-items:center;gap:6px;color:var(--gray-500);">
-                        <i class="fas fa-user"></i> Individual Visit
-                    </span>`);
+                $('#modalGroupStatus').html(`<span class="group-tag" style="background:#f1f5f9;color:#64748b;"><i class="fas fa-user"></i> Individual</span>`);
                 $('#groupMembersRow').hide();
             }
 
             $('#modalNotes').text(visitor.additional_notes || 'No additional notes provided');
 
+            // helper: split formatted datetime into date / time parts
+            function splitDT(raw) {
+                if (!raw) return { date: '—', time: '' };
+                const fmt = formatFullDateTime(raw); // e.g. "Jun 14, 2025, 10:30 AM"
+                const commaIdx = fmt.lastIndexOf(', ');
+                if (commaIdx === -1) return { date: fmt, time: '' };
+                return { date: fmt.substring(0, commaIdx), time: fmt.substring(commaIdx + 2) };
+            }
+
             // ── status + time ──
             if (isRegisteredVisitor) {
-                // registered visitor — show last visit data if one exists
                 $('#vmPassPill').text(visitor.visit_pass || '—');
                 $('#modalVisitorPass').text(visitor.visit_pass || '—');
                 $('#modalCheckoutBtn').hide();
 
                 if (!visitor.visit_pass) {
-                    // no visits at all
-                    $('#modalStatus').html(`
-                        <div class="vm-status-pill spl-registered">
-                            <div class="vm-status-pulse"></div>
-                            Registered — No visits yet
-                        </div>`);
+                    $('#modalStatus').html(`<div class="status-pill"><span class="status-dot"></span> Registered — No visits yet</div>`);
                     $('#modalCheckInTime').text('No visits yet');
+                    $('#modalCheckInSub').text('');
                     $('#modalCheckOutTime').text('—');
+                    $('#modalCheckOutSub').text('');
                     $('#modalDuration').text('—');
                     $('#vmDurationHero').hide();
                 } else {
@@ -2175,20 +1917,18 @@ $csrf_token = generateCSRFToken();
                                       : visitor.visit_status === 'checked_in'  ? 'Currently Checked In'
                                       : visitor.visit_status === 'no_show'     ? 'Last Visit: No Show'
                                       : 'Registered';
-                    const statusClass = visitor.visit_status === 'checked_in' ? 'spl-active' : 'spl-registered';
-                    $('#modalStatus').html(`
-                        <div class="vm-status-pill ${statusClass}">
-                            <div class="vm-status-pulse"></div>
-                            ${statusLabel}
-                        </div>`);
-                    $('#modalCheckInTime').html(visitor.check_in_time
-                        ? formatFullDateTime(visitor.check_in_time).replace(', ', '<br>')
-                        : '—');
-                    $('#modalCheckOutTime').html(visitor.check_out_time
-                        ? formatFullDateTime(visitor.check_out_time).replace(', ', '<br>')
-                        : '—');
-                    $('#modalDuration').text(visitor.duration_minutes > 0
-                        ? formatDuration(visitor.duration_minutes) : '—');
+                    const statusClass = visitor.visit_status === 'checked_in' ? '' : ' registered';
+                    $('#modalStatus').html(`<div class="status-pill${statusClass}"><span class="status-dot"></span> ${statusLabel}</div>`);
+
+                    const ci = splitDT(visitor.check_in_time);
+                    $('#modalCheckInTime').text(ci.date);
+                    $('#modalCheckInSub').text(ci.time);
+
+                    const co = splitDT(visitor.check_out_time);
+                    $('#modalCheckOutTime').text(co.date);
+                    $('#modalCheckOutSub').text(co.time);
+
+                    $('#modalDuration').text(visitor.duration_minutes > 0 ? formatDuration(visitor.duration_minutes) : '—');
                     if (visitor.duration_minutes > 0) {
                         $('#vmDurationText').text(formatDurationLong(visitor.duration_minutes));
                         $('#vmDurationHero').show();
@@ -2202,26 +1942,26 @@ $csrf_token = generateCSRFToken();
                 $('#vmPassPill').text(visitor.visit_pass || '—');
 
                 if (visitor.is_overdue) {
-                    $('#modalStatus').html(`
-                        <div class="vm-status-pill spl-overdue">
-                            <div class="vm-status-pulse"></div>
-                            Overdue
-                        </div>`);
+                    $('#modalStatus').html(`<div class="status-pill overdue"><span class="status-dot"></span> Overdue</div>`);
                 } else {
-                    $('#modalStatus').html(`
-                        <div class="vm-status-pill spl-active">
-                            <div class="vm-status-pulse"></div>
-                            Active Visit
-                        </div>`);
+                    $('#modalStatus').html(`<div class="status-pill"><span class="status-dot"></span> Active Visit</div>`);
                 }
 
-                $('#modalCheckInTime').html(formatFullDateTime(visitor.check_in_time).replace(', ', '<br>'));
-                $('#modalCheckOutTime').html(visitor.check_out_time
-                    ? formatFullDateTime(visitor.check_out_time).replace(', ', '<br>')
-                    : 'Still<br>checked in');
+                const ci = splitDT(visitor.check_in_time);
+                $('#modalCheckInTime').text(ci.date);
+                $('#modalCheckInSub').text(ci.time);
+
+                if (visitor.check_out_time) {
+                    const co = splitDT(visitor.check_out_time);
+                    $('#modalCheckOutTime').text(co.date);
+                    $('#modalCheckOutSub').text(co.time);
+                } else {
+                    $('#modalCheckOutTime').text('Still on campus');
+                    $('#modalCheckOutSub').text('');
+                }
+
                 $('#modalDuration').text(formatDuration(visitor.duration_minutes));
 
-                // duration hero
                 if (visitor.duration_minutes > 0) {
                     $('#vmDurationText').text(formatDurationLong(visitor.duration_minutes));
                     $('#vmDurationHero').show();
@@ -2257,7 +1997,6 @@ $csrf_token = generateCSRFToken();
                 const dialog = modal.querySelector('.modal-dialog');
                 if (dialog) {
                     dialog.style.margin = '1.75rem auto';
-                    dialog.style.maxWidth = '900px';
                 }
 
                 backdrop.onclick = function() { hideModal(); };

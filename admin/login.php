@@ -42,7 +42,8 @@ $csrf_token = generateCSRFToken();
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Admin Login - <?php echo APP_NAME; ?></title>
+    <title>Login Page - <?php echo APP_NAME; ?></title>
+    <link rel="icon" type="image/png" href="/logbooksystem/assets/images/sdsclogo.png">
     <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@400;500;600;700&family=DM+Sans:wght@300;400;500;600&display=swap" rel="stylesheet">
     <style>
         :root {

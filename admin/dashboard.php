@@ -51,7 +51,7 @@ try {
     
     // Get currently active visits
     $active_visits = $db->fetchAll("
-        SELECT v.*, vis.first_name, vis.last_name, vis.phone, vis.company_organization,
+        SELECT v.*, vis.first_name, vis.last_name, vis.phone,
                v.person_to_visit, v.purpose,
                TIMESTAMPDIFF(MINUTE, v.check_in_time, NOW()) as duration_minutes,
                CASE WHEN NOW() > v.expected_checkout_time THEN 1 ELSE 0 END as is_overstay
@@ -106,15 +106,10 @@ try {
     // Get top companies/organizations
     $company_stats = $db->fetchAll("
         SELECT 
-            CASE 
-                WHEN vis.company_organization IS NULL OR vis.company_organization = '' THEN 'Individual Visitor'
-                ELSE vis.company_organization 
-            END as company_name,
             COUNT(*) as count
         FROM visits v
         JOIN visitors vis ON v.visitor_id = vis.id
         WHERE DATE(v.check_in_time) >= DATE_SUB(CURDATE(), INTERVAL 30 DAY)
-        GROUP BY vis.company_organization
         ORDER BY count DESC
         LIMIT 5
     ");
@@ -184,7 +179,8 @@ try {
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Admin Dashboard - <?php echo APP_NAME; ?></title>
+    <title>Admin Dashboard</title>
+    <link rel="icon" type="image/png" href="/logbooksystem/assets/images/sdsclogo.png">
     <link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&family=DM+Sans:ital,wght@0,300;0,400;0,500;0,600;1,400&display=swap" rel="stylesheet">
     <link href="../assets/css/bootstrap.min.css" rel="stylesheet">
     <link href="../assets/css/vendor/font-awesome.min.css" rel="stylesheet">
@@ -292,7 +288,7 @@ try {
         }
 
         .page-header h2 {
-            font-family: 'Syne', sans-serif;
+            font-family: 'Work Sans', sans-serif;
             font-size: 1.8rem;
             font-weight: 800;
             color: #fff;
@@ -320,7 +316,7 @@ try {
         }
 
         .time-display .h5 {
-            font-family: 'Syne', sans-serif;
+            font-family: 'Work Sans', sans-serif;
             font-size: .95rem;
             font-weight: 700;
             margin-bottom: 2px;
@@ -377,17 +373,17 @@ try {
         .stat-card.s-orange .stat-icon-wrap { background: var(--accent-orange-lt); color: var(--accent-orange); }
 
         .stat-number {
-            font-family: 'Syne', sans-serif;
+            font-family: 'Work Sans', sans-serif;
             font-size: 2.6rem;
             font-weight: 800;
             line-height: 1;
             margin-bottom: 5px;
         }
 
-        .stat-card.s-blue   .stat-number { color: var(--accent-blue); }
+        .stat-card.s-blue   .stat-number { color: var(--gray-900); }
         .stat-card.s-green  .stat-number { color: #16a34a; }
-        .stat-card.s-teal   .stat-number { color: var(--accent-teal); }
-        .stat-card.s-orange .stat-number { color: var(--accent-orange); }
+        .stat-card.s-teal   .stat-number { color: var(--gray-950); }
+        .stat-card.s-orange .stat-number { color: var(--gray-800); }
 
         .stat-label {
             font-size: .72rem;
@@ -419,7 +415,7 @@ try {
         }
 
         .card-header-title {
-            font-family: 'Syne', sans-serif;
+            font-family: 'Work Sans', sans-serif;
             font-size: .95rem;
             font-weight: 700;
             color: var(--gray-800);
@@ -578,7 +574,7 @@ try {
 
         /* ─── SECTION TITLES ─── */
         .section-title {
-            font-family: 'Syne', sans-serif;
+            font-family: 'Work Sans', sans-serif;
             font-size: 1rem;
             font-weight: 700;
             color: var(--gray-800);
@@ -752,13 +748,13 @@ try {
                         Currently Inside
                         <span class="badge bg-primary ms-1"><?php echo count($active_visits); ?></span>
                     </h5>
-                    <a href="checkout.php" class="btn btn-sm" style="background:var(--accent-blue-lt);color:var(--accent-blue);font-weight:600;font-size:.8rem;padding:5px 12px;border-radius:var(--radius-xs);">View All</a>
+                    <a href="admin-visitor-checkin.php" class="btn btn-sm" style="background:var(--accent-blue-lt);color:var(--accent-blue);font-weight:600;font-size:.8rem;padding:5px 12px;border-radius:var(--radius-xs);">View All</a>
                 </div>
                     <div class="card-body p-0" style="max-height: 400px; overflow-y: auto;">
                         <?php if ($active_visits): ?>
                             <?php foreach ($active_visits as $visit): ?>
                                 <div class="active-visitor-item p-3 <?php echo $visit['is_overstay'] ? 'overstay' : ''; ?>"
-                                     onclick="window.location.href='checkout.php?search_term=<?php echo urlencode($visit['visit_pass']); ?>'">
+                                     onclick="window.location.href='admin-visitor-checkin.php?search_term=<?php echo urlencode($visit['visit_pass']); ?>'">
                                     <div class="row align-items-center">
                                         <div class="col-md-5">
                                             <h6 class="mb-1">
@@ -767,12 +763,6 @@ try {
                                                     <span class="badge bg-danger ms-2">Overstay</span>
                                                 <?php endif; ?>
                                             </h6>
-                                            <p class="text-muted mb-0 small">
-                                                <i class="fas fa-phone me-1"></i><?php echo htmlspecialchars($visit['phone']); ?>
-                                                <?php if ($visit['company_organization']): ?>
-                                                    <br><i class="fas fa-building me-1"></i><?php echo htmlspecialchars($visit['company_organization']); ?>
-                                                <?php endif; ?>
-                                            </p>
                                         </div>
                                         <div class="col-md-4">
                                             <p class="mb-0 small">

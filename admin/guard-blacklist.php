@@ -63,7 +63,8 @@ try {
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Blocklist Management - <?php echo APP_NAME; ?></title>
+    <title>Blocklist</title>
+    <link rel="icon" type="image/png" href="/logbooksystem/assets/images/sdsclogo.png">
     <link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&family=DM+Sans:ital,wght@0,300;0,400;0,500;0,600;1,400&display=swap" rel="stylesheet">
     <link href="../assets/css/bootstrap.min.css" rel="stylesheet">
     <link href="../assets/css/vendor/font-awesome.min.css" rel="stylesheet">
@@ -172,7 +173,7 @@ try {
         }
 
         .page-header h2 {
-            font-family: 'Syne', sans-serif;
+            font-family: 'Work Sans', sans-serif;
             font-size: 1.8rem;
             font-weight: 800;
             color: #fff;
@@ -252,7 +253,7 @@ try {
         }
 
         .card-header-title {
-            font-family: 'Syne', sans-serif;
+            font-family: 'Work Sans', sans-serif;
             font-size: .95rem;
             font-weight: 700;
             color: var(--gray-800);
@@ -551,7 +552,7 @@ try {
         }
 
         .empty-title {
-            font-family: 'Syne', sans-serif;
+            font-family: 'Work Sans', sans-serif;
             font-weight: 700;
             font-size: .95rem;
             color: var(--gray-700);
@@ -680,7 +681,7 @@ try {
                         <i class="fas fa-ban" style="color:var(--accent-red);"></i>
                     </div>
                     <div>
-                        <div style="font-size:1.5rem;font-weight:800;font-family:'Syne',sans-serif;color:var(--gray-900);line-height:1;"><?php echo $total_blocked; ?></div>
+                        <div style="font-size:1.5rem;font-weight:800;font-family:'Work Sans',sans-serif;color:var(--gray-900);line-height:1;"><?php echo $total_blocked; ?></div>
                         <div style="font-size:.75rem;color:var(--gray-500);margin-top:2px;">Total Blocked</div>
                     </div>
                 </div>
@@ -691,7 +692,7 @@ try {
                         <i class="fas fa-infinity" style="color:#991b1b;"></i>
                     </div>
                     <div>
-                        <div style="font-size:1.5rem;font-weight:800;font-family:'Syne',sans-serif;color:var(--gray-900);line-height:1;"><?php echo $permanent_count; ?></div>
+                        <div style="font-size:1.5rem;font-weight:800;font-family:'Work Sans',sans-serif;color:var(--gray-900);line-height:1;"><?php echo $permanent_count; ?></div>
                         <div style="font-size:.75rem;color:var(--gray-500);margin-top:2px;">Permanent Bans</div>
                     </div>
                 </div>
@@ -702,7 +703,7 @@ try {
                         <i class="fas fa-clock" style="color:var(--accent-orange);"></i>
                     </div>
                     <div>
-                        <div style="font-size:1.5rem;font-weight:800;font-family:'Syne',sans-serif;color:var(--gray-900);line-height:1;"><?php echo $expiring_soon; ?></div>
+                        <div style="font-size:1.5rem;font-weight:800;font-family:'Work Sans',sans-serif;color:var(--gray-900);line-height:1;"><?php echo $expiring_soon; ?></div>
                         <div style="font-size:.75rem;color:var(--gray-500);margin-top:2px;">Expiring in 7 Days</div>
                     </div>
                 </div>

@@ -1440,7 +1440,7 @@ $current_dir = basename(dirname($_SERVER['PHP_SELF']));
 .lo-icon-wrap i { font-size:1.8rem; color:#fff; }
 .lo-header h5 {
     position:relative; z-index:1;
-    color:#fff; font-family:'Syne',sans-serif; font-size:1.2rem; font-weight:800; margin:0 0 5px;
+    color:#fff; font-family:'Work Sans',sans-serif; font-size:1.2rem; font-weight:800; margin:0 0 5px;
 }
 .lo-header p { position:relative; z-index:1; color:rgba(255,255,255,.75); font-size:.83rem; margin:0; }
 .lo-body { padding:24px 28px 4px; }

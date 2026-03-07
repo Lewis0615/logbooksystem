@@ -5,6 +5,7 @@
  */
 
 require_once '../config/config.php';
+require_once '../config/settings.php';
 require_once '../config/auth.php';
 
 // Require admin or supervisor role
@@ -16,10 +17,13 @@ if (!$auth->hasRole(ROLE_ADMIN) && !$auth->hasRole(ROLE_SUPERVISOR)) {
 
 $error_message = '';
 
+// Load purpose list from settings (same source as the registration form)
+$visit_purposes = getSettingList('visit_purposes_list', $visit_purposes);
+
 // Get visitor history
 try {
     $visits = $db->fetchAll("
-        SELECT v.*, vis.first_name, vis.last_name, vis.phone, vis.email, vis.company_organization, vis.address,
+        SELECT v.*, vis.first_name, vis.last_name, vis.phone, vis.email, vis.address,
                CONCAT(u_in.first_name, ' ', u_in.last_name) as checked_in_by_name,
                CONCAT(u_out.first_name, ' ', u_out.last_name) as checked_out_by_name
         FROM visits v
@@ -40,7 +44,8 @@ try {
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Visitor History - <?php echo APP_NAME; ?></title>
+    <title>Visitor History</title>
+    <link rel="icon" type="image/png" href="/logbooksystem/assets/images/sdsclogo.png">
     <link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&family=DM+Sans:ital,wght@0,300;0,400;0,500;0,600;1,400&display=swap" rel="stylesheet">
     <link href="../assets/css/bootstrap.min.css" rel="stylesheet">
     <link href="../assets/css/vendor/font-awesome.min.css" rel="stylesheet">
@@ -152,7 +157,7 @@ try {
         }
 
         .page-header h2 {
-            font-family: 'Syne', sans-serif;
+            font-family: 'Work Sans', sans-serif;
             font-size: 1.8rem;
             font-weight: 800;
             color: #fff;
@@ -192,7 +197,7 @@ try {
         }
 
         .card-header h5 {
-            font-family: 'Syne', sans-serif;
+            font-family: 'Work Sans', sans-serif;
             font-size: .95rem;
             font-weight: 700;
             color: var(--gray-800);
@@ -381,7 +386,7 @@ try {
         }
 
         h5, h6 {
-            font-family: 'Syne', sans-serif;
+            font-family: 'Work Sans', sans-serif;
             font-weight: 700;
         }
 
@@ -444,7 +449,7 @@ try {
         }
 
         .filter-header h5 {
-            font-family: 'Syne', sans-serif;
+            font-family: 'Work Sans', sans-serif;
             font-size: .92rem;
             font-weight: 700;
             color: var(--gray-800);
@@ -762,11 +767,7 @@ try {
                         <label class="filter-form-label"><i class="fas fa-tag"></i> Purpose</label>
                         <select class="filter-control" id="f-purpose">
                             <option value="">All Purposes</option>
-                            <?php
-                            // Build purpose options from the already-fetched $visits array — no extra query
-                            $purposes = array_unique(array_filter(array_column($visits, 'purpose')));
-                            sort($purposes);
-                            foreach ($purposes as $purpose): ?>
+                            <?php foreach ($visit_purposes as $purpose): ?>
                                 <option value="<?php echo strtolower(htmlspecialchars($purpose)); ?>">
                                     <?php echo htmlspecialchars($purpose); ?>
                                 </option>

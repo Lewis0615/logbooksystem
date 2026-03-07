@@ -110,7 +110,8 @@ $csrf_token = generateCSRFToken();
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Profile Settings - <?php echo APP_NAME; ?></title>
+    <title>Profile Settings</title>
+    <link rel="icon" type="image/png" href="/logbooksystem/assets/images/sdsclogo.png">
     <link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&family=DM+Sans:ital,wght@0,300;0,400;0,500;0,600;1,400&display=swap" rel="stylesheet">
     <link href="../assets/css/bootstrap.min.css" rel="stylesheet">
     <link href="../assets/css/vendor/font-awesome.min.css" rel="stylesheet">
@@ -219,7 +220,7 @@ $csrf_token = generateCSRFToken();
         }
 
         .page-header h2 {
-            font-family: 'Syne', sans-serif;
+            font-family: 'Work Sans', sans-serif;
             font-size: 1.8rem;
             font-weight: 800;
             color: #fff;
@@ -296,7 +297,7 @@ $csrf_token = generateCSRFToken();
         }
 
         .card-header-title {
-            font-family: 'Syne', sans-serif;
+            font-family: 'Work Sans', sans-serif;
             font-size: 1.1rem;
             font-weight: 700;
             color: var(--gray-800);
@@ -429,7 +430,7 @@ $csrf_token = generateCSRFToken();
         }
 
         .profile-name {
-            font-family: 'Syne', sans-serif;
+            font-family: 'Work Sans', sans-serif;
             font-size: 1.5rem;
             font-weight: 700;
             color: var(--gray-900);

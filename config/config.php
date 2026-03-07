@@ -10,7 +10,7 @@ if (session_status() == PHP_SESSION_NONE) {
 }
 
 // Application Settings
-define('APP_NAME', 'SDSC - Visitor Log Book Management System');
+define('APP_NAME', 'SDSC - E-Visitor Log Book Management System');
 define('APP_VERSION', '1.0.0');
 define('APP_URL', 'http://localhost/logbooksystem');
 define('UPLOAD_PATH', __DIR__ . '/../assets/uploads/');

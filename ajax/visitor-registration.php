@@ -7,13 +7,20 @@
  * No authentication required for this endpoint
  */
 
-header('Content-Type: application/json');
-require_once '../config/config.php';
-require_once '../config/settings.php';
-
+ob_start();
 error_reporting(E_ALL);
 ini_set('display_errors', 0);
-ob_start();
+
+header('Content-Type: application/json');
+
+try {
+    require_once '../config/config.php';
+    require_once '../config/settings.php';
+} catch (Throwable $bootErr) {
+    ob_end_clean();
+    echo json_encode(['success' => false, 'message' => 'Server configuration error: ' . $bootErr->getMessage(), 'data' => null]);
+    exit();
+}
 
 $response = ['success' => false, 'message' => '', 'data' => null];
 
@@ -203,7 +210,7 @@ try {
     $maxCampusCapacity = (int)getSystemSetting('max_group_size', '0');
     if ($maxCampusCapacity > 0) {
         $occupancyRow = $db->fetch(
-            "SELECT COALESCE(SUM(CASE WHEN is_group_visit = 1 THEN group_size ELSE 1 END), 0) AS total_people
+            "SELECT COALESCE(SUM(CASE WHEN is_group_visit = 1 THEN COALESCE(NULLIF(group_size, 0), 1) ELSE 1 END), 0) AS total_people
              FROM visits WHERE status = 'checked_in'"
         );
         $currentPeople = (int)($occupancyRow['total_people'] ?? 0);
